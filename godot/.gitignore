@@ -1,0 +1,7 @@
+# Godot editor cache and imported assets. The playable project is
+# project.godot + .tscn + .gd only — do not commit the editor's junk drawer.
+.godot/
+**/.godot/
+*.uid
+export_presets.cfg
+*.translation
