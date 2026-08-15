@@ -147,10 +147,13 @@ func _pick(option_id: String) -> void:
 
 
 func _render_options() -> void:
+	# _pick / 「重开这一幕」都接在 Button.pressed 上。这里若 free()，
+	# 等于在回调还没返回时拆掉正在发射的按钮（Attempted to free a locked object）。
+	# queue_free 等到这一帧空闲再删；交易回血、旗标同步仍立刻写进 HUD。
 	while options_box.get_child_count() > 0:
 		var child := options_box.get_child(0)
 		options_box.remove_child(child)
-		child.free()
+		child.queue_free()
 	if str(npc.get("state", "")) == "done":
 		var again := _make_option_button("重开这一幕", true)
 		again.pressed.connect(_on_replay_pressed)
