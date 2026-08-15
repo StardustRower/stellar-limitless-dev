@@ -1,0 +1,294 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://huiyan_room.gd" id="1_room"]
+
+[node name="HuiyanRoom" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_room")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.0392157, 0.0352941, 0.0313726, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 16
+
+[node name="Layout" type="HBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="FigureHost" type="Control" parent="Margin/Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(380, 0)
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.92
+
+[node name="Cave" type="ColorRect" parent="Margin/Layout/FigureHost"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.101961, 0.0862745, 0.0784314, 1)
+
+[node name="Bedding" type="ColorRect" parent="Margin/Layout/FigureHost"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -90.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+color = Color(0.0627451, 0.054902, 0.0470588, 1)
+
+[node name="Silhouette" type="Node2D" parent="Margin/Layout/FigureHost"]
+unique_name_in_owner = true
+position = Vector2(190, 36)
+
+[node name="Shadow" type="Polygon2D" parent="Margin/Layout/FigureHost/Silhouette"]
+color = Color(0, 0, 0, 0.35)
+polygon = PackedVector2Array(-54, 508, 54, 508, 40, 492, -40, 492)
+
+[node name="Coat" type="Polygon2D" parent="Margin/Layout/FigureHost/Silhouette"]
+color = Color(0.239216, 0.309804, 0.298039, 1)
+polygon = PackedVector2Array(-50, 492, -26, 250, 34, 250, 46, 492)
+
+[node name="Torso" type="Polygon2D" parent="Margin/Layout/FigureHost/Silhouette"]
+color = Color(0.494118, 0.658824, 0.643137, 1)
+polygon = PackedVector2Array(-34, 262, -26, 168, 28, 164, 36, 262)
+
+[node name="Head" type="Polygon2D" parent="Margin/Layout/FigureHost/Silhouette"]
+unique_name_in_owner = true
+color = Color(0.772549, 0.866667, 0.847059, 1)
+polygon = PackedVector2Array(0, 78, 16, 84, 22, 100, 16, 116, 0, 122, -16, 116, -22, 100, -16, 84)
+
+[node name="Hat" type="Polygon2D" parent="Margin/Layout/FigureHost/Silhouette"]
+color = Color(0.164706, 0.129412, 0.0941176, 1)
+polygon = PackedVector2Array(-24, 92, -22, 78, 22, 78, 24, 92)
+
+[node name="EyeL" type="Polygon2D" parent="Margin/Layout/FigureHost/Silhouette"]
+color = Color(0.101961, 0.0862745, 0.0705882, 1)
+polygon = PackedVector2Array(-10, 100, -4, 100, -4, 106, -10, 106)
+
+[node name="EyeR" type="Polygon2D" parent="Margin/Layout/FigureHost/Silhouette"]
+color = Color(0.101961, 0.0862745, 0.0705882, 1)
+polygon = PackedVector2Array(6, 100, 12, 100, 12, 106, 6, 106)
+
+[node name="Book" type="Polygon2D" parent="Margin/Layout/FigureHost/Silhouette"]
+color = Color(0.164706, 0.129412, 0.0862745, 1)
+polygon = PackedVector2Array(-10, 248, 12, 248, 12, 270, -10, 270)
+
+[node name="HammerHaft" type="Polygon2D" parent="Margin/Layout/FigureHost/Silhouette"]
+unique_name_in_owner = true
+color = Color(0.843137, 0.709804, 0.415686, 1)
+polygon = PackedVector2Array(22, 250, 26, 250, 58, 196, 54, 192)
+
+[node name="HammerHead" type="Polygon2D" parent="Margin/Layout/FigureHost/Silhouette"]
+unique_name_in_owner = true
+color = Color(0.541176, 0.427451, 0.196078, 1)
+polygon = PackedVector2Array(46, 184, 72, 176, 76, 190, 50, 198)
+
+[node name="OilFlask" type="Polygon2D" parent="Margin/Layout/FigureHost/Silhouette"]
+unique_name_in_owner = true
+visible = false
+color = Color(0.788235, 0.643137, 0.360784, 1)
+polygon = PackedVector2Array(-58, 280, -44, 280, -42, 304, -60, 304)
+
+[node name="OmenMark" type="Polygon2D" parent="Margin/Layout/FigureHost"]
+unique_name_in_owner = true
+visible = false
+position = Vector2(300, 170)
+color = Color(0.862745, 0.54902, 0.27451, 0.85)
+polygon = PackedVector2Array(0, -16, 4, -4, 16, 0, 4, 4, 0, 16, -4, 4, -16, 0, -4, -4)
+
+[node name="OmenCaption" type="Label" parent="Margin/Layout/FigureHost"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -168.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 48.0
+grow_horizontal = 0
+theme_override_colors/font_color = Color(0.862745, 0.54902, 0.27451, 1)
+theme_override_font_sizes/font_size = 14
+text = "异兆 · 没有格子可标"
+horizontal_alignment = 2
+
+[node name="FigureCaption" type="Label" parent="Margin/Layout/FigureHost"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = -40.0
+offset_right = -12.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.721569, 0.643137, 0.521569, 1)
+theme_override_font_sizes/font_size = 14
+text = "灰岩 · 前任测绘员 · Polygon2D 剪影，没有图片资源"
+horizontal_alignment = 1
+
+[node name="Talk" type="VBoxContainer" parent="Margin/Layout"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.12
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="Margin/Layout/Talk"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.917647, 0.862745, 0.776471, 1)
+theme_override_font_sizes/font_size = 22
+text = "Demo 6 · Godot 第一间房 · 同一张灰岩表"
+
+[node name="SubtitleLabel" type="Label" parent="Margin/Layout/Talk"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.721569, 0.643137, 0.521569, 1)
+autowrap_mode = 3
+text = "没有走路，没有地牢。选项来自 npc_table.gd，和 HTML 的 js/npc-table.js 是同一张图。本地台词，不接 HTTP / LLM / 账本。"
+
+[node name="SeedRow" type="HBoxContainer" parent="Margin/Layout/Talk"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SeedCaption" type="Label" parent="Margin/Layout/Talk/SeedRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.917647, 0.862745, 0.776471, 1)
+text = "测线"
+
+[node name="SeedEdit" type="LineEdit" parent="Margin/Layout/Talk/SeedRow"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(180, 0)
+size_flags_horizontal = 3
+text = "stardust-7"
+placeholder_text = "stardust-7"
+
+[node name="ReplayButton" type="Button" parent="Margin/Layout/Talk/SeedRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "重开这一幕"
+
+[node name="WhoRow" type="HBoxContainer" parent="Margin/Layout/Talk"]
+layout_mode = 2
+
+[node name="WhoLabel" type="Label" parent="Margin/Layout/Talk/WhoRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.788235, 0.643137, 0.360784, 1)
+theme_override_font_sizes/font_size = 18
+text = "灰岩 · 前任测绘员"
+
+[node name="StateLabel" type="Label" parent="Margin/Layout/Talk/WhoRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.494118, 0.658824, 0.643137, 1)
+text = "问候"
+horizontal_alignment = 2
+
+[node name="HpRow" type="HBoxContainer" parent="Margin/Layout/Talk"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HpLabel" type="Label" parent="Margin/Layout/Talk/HpRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.917647, 0.862745, 0.776471, 1)
+text = "HP 7/10"
+
+[node name="HpBar" type="ProgressBar" parent="Margin/Layout/Talk/HpRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 16)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 10.0
+value = 7.0
+show_percentage = false
+
+[node name="BagLabel" type="Label" parent="Margin/Layout/Talk"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.721569, 0.643137, 0.521569, 1)
+autowrap_mode = 3
+text = "背包 半页测线记录，墨水遇潮发花"
+
+[node name="FlagsLabel" type="Label" parent="Margin/Layout/Talk"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.721569, 0.643137, 0.521569, 1)
+autowrap_mode = 3
+text = "旗标 初见 · 未交易 · 未警告 · 上次 idle"
+
+[node name="TalkLine" type="Label" parent="Margin/Layout/Talk"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.917647, 0.862745, 0.776471, 1)
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
+text = "……"
+
+[node name="MechanicLabel" type="Label" parent="Margin/Layout/Talk"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.541176, 0.478431, 0.380392, 1)
+autowrap_mode = 3
+text = "数字只来自表，不来自句子。引擎：本地台词（这一课不接 LLM）。"
+
+[node name="Options" type="VBoxContainer" parent="Margin/Layout/Talk"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ToolRow" type="HBoxContainer" parent="Margin/Layout/Talk"]
+layout_mode = 2
+
+[node name="DropPageButton" type="Button" parent="Margin/Layout/Talk/ToolRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "放下残页"
+tooltip_text = "放下后，交易按钮会变灰——那是表在拒绝。"
+
+[node name="HintLabel" type="Label" parent="Margin/Layout/Talk"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.541176, 0.478431, 0.380392, 1)
+autowrap_mode = 3
+text = "问候之后只能打听 / 交易 / 警告，不能跳到告别。交易需要测线残页；回血写在表上（3 点）。开局 HP 7，换油后应看到 7→10。按 F5 运行这一幕。"
+
+[connection signal="text_submitted" from="Margin/Layout/Talk/SeedRow/SeedEdit" to="." method="_on_seed_submitted"]
+[connection signal="pressed" from="Margin/Layout/Talk/SeedRow/ReplayButton" to="." method="_on_replay_pressed"]
+[connection signal="pressed" from="Margin/Layout/Talk/ToolRow/DropPageButton" to="." method="_on_drop_page_pressed"]
