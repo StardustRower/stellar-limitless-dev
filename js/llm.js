@@ -122,8 +122,13 @@ var LLM = (function () {
       var bank = lang === "en" ? ctx.gmEvent.narrateEn : ctx.gmEvent.narrateZh;
       if (bank && bank.length) return rng.pick(bank);
     }
-    if (ctx.trigger === "npc_talk" && typeof NPC !== "undefined" && NPC.localLine) {
-      return NPC.localLine(ctx);
+    if (ctx.trigger === "npc_talk") {
+      if (typeof NpcTable !== "undefined" && NpcTable.localLine) {
+        return NpcTable.localLine(ctx);
+      }
+      if (typeof NPC !== "undefined" && NPC.localLine) {
+        return NPC.localLine(ctx);
+      }
     }
     if (ctx.trigger === "game_over") {
       return lang === "en"
