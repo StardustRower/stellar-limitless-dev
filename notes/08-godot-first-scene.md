@@ -32,6 +32,6 @@ HTML 演示没有被这一课替换。双击 `index.html` 或 `vn.html` 仍然�
 | `godot/huiyan/npc_table.gd` | 状态、选项、下一跳、残页换哪件物品、回几滴血、本地台词库 | 怎么画、在不在格子里、记不记得上一层 |
 | 房间壳 `huiyan_room.gd` + `huiyan_room.tscn` | 剪影节点、对话框、选项按钮、HP 条 | 另一套状态 |
 | 本地台词 | 当前状态怎么把那一跳说出口 | HP、物品、下一站 |
-| 账本 / LLM | **下一课才接。** 这一课文件里写了注释，代码不去问端口。 | — |
+| 账本 | Demo 7 才接：`memory.gd` 问同一本四个旗标。见 [notes/09-godot-ledger.md](09-godot-ledger.md)。 | 聊天记录 |
 
 想自己拧：打开 `godot/huiyan/npc_table.gd`，只改交易的 `heal`，或把问候里某一跳的 `next` 改掉。保存，回到编辑器按 F5。对照 `js/npc-table.js`：两边应仍是同一张图；若只改房间脚本里的句子，他仍不会从问候跳到告别。

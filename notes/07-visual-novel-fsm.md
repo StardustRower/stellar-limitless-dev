@@ -50,4 +50,4 @@
 
 想自己拧：打开 `js/npc-table.js`，只改交易的治疗点数，或把问候里某一跳的 `next` 改掉。保存，分别打开 `index.html` 和 `vn.html`。你会立刻感到：改的是规则，两处皮肤一起变。如果只改 `vn.js` 里的句子，表没动，他仍不会从问候跳到告别。
 
-Demo 6 已经打开 Godot：第一间房在 `godot/huiyan/`，表抄进 Dictionary，见 [notes/08-godot-first-scene.md](08-godot-first-scene.md)。
+Demo 6 已经打开 Godot：第一间房在 `godot/huiyan/`，表抄进 Dictionary，见 [notes/08-godot-first-scene.md](08-godot-first-scene.md)。Demo 7 让这间房去问同一本旗标账本，见 [notes/09-godot-ledger.md](09-godot-ledger.md)。
