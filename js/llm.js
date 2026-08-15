@@ -70,7 +70,10 @@ var LLM = (function () {
 
   function cacheKey(ctx) {
     var gm = ctx.gmEvent && ctx.gmEvent.id ? ctx.gmEvent.id : "";
-    return [ctx.seed, ctx.lang, ctx.trigger, ctx.roomId, ctx.kind, ctx.x, ctx.y, gm].join("|");
+    var npc = ctx.trigger === "npc_talk"
+      ? (ctx.npcState || "") + ":" + (ctx.npcOption || "")
+      : "";
+    return [ctx.seed, ctx.lang, ctx.trigger, ctx.roomId, ctx.kind, ctx.x, ctx.y, gm, npc].join("|");
   }
 
   function localDescribe(ctx, rng) {
@@ -112,6 +115,9 @@ var LLM = (function () {
       var bank = lang === "en" ? ctx.gmEvent.narrateEn : ctx.gmEvent.narrateZh;
       if (bank && bank.length) return rng.pick(bank);
     }
+    if (ctx.trigger === "npc_talk" && typeof NPC !== "undefined" && NPC.localLine) {
+      return NPC.localLine(ctx);
+    }
     if (ctx.trigger === "game_over") {
       return lang === "en"
         ? "The flame pinches out. The last thing you map is the tile underfoot. Seed stays; the body does not. Regen, or take another seed."
@@ -126,7 +132,43 @@ var LLM = (function () {
    * 给真实 LLM 的提示草稿：短、具体、禁止它自我介绍。
    * 把「可复现」交给 temperature 偏低 + 同一 seed 写进 prompt。
    */
+  function buildNpcMessages(ctx) {
+    var langLine = {
+      zh: "用简体中文写 2～3 句台词。你就是这个人在说话，不要旁白腔，不要自称 AI。",
+      en: "Write 2–3 sentences of in-character dialogue in English. Do not narrate from outside. Do not mention being an AI.",
+      mix: "先写 2 句简体中文台词，再写 2 句英文台词。同一意思，不要互译腔。"
+    };
+    var sys = "You are " + (ctx.npcNameEn || "Huiyan") + " / " + (ctx.npcNameZh || "灰岩");
+    sys += ", a former geological surveyor still standing in this one dungeon room. ";
+    sys += langLine[ctx.lang] || langLine.zh;
+    sys += " Speak ONLY as this NPC in the current dialogue state. Never invent HP, damage, gold, or items.";
+    sys += " Never change numbers. Never skip to another state. Do not give the player objects that are not already in the engine table.";
+    if (ctx.npcState === "trade") {
+      sys += " The engine already swapped a survey page for lamp oil and applied the table's heal. Imply warmth; never say +HP or a digit.";
+    }
+    if (ctx.npcState === "warn") {
+      sys += " You warn about a marked omen tile ahead. Do not invent monsters, new rooms, or loot.";
+    }
+    var user = [
+      "state=" + ctx.npcState,
+      "state_name=" + (ctx.npcStateZh || "") + " / " + (ctx.npcStateEn || ""),
+      "player_option=" + (ctx.npcOption || "open"),
+      "option_label=" + (ctx.npcOptionLabel || ""),
+      "hp=" + ctx.hp + "/" + ctx.maxHp + " (never state the number; you may imply fatigue or relief)",
+      ctx.inventory && ctx.inventory.length ? "carrying=" + ctx.inventory.join(", ") : "carrying=nothing",
+      "room=" + ctx.nameZh + " / " + ctx.nameEn,
+      "traded=" + (ctx.npcTraded ? "yes" : "no"),
+      "warned=" + (ctx.npcWarned ? "yes" : "no"),
+      "seed=" + ctx.seed
+    ];
+    return [
+      { role: "system", content: sys },
+      { role: "user", content: user.join("\n") }
+    ];
+  }
+
   function buildMessages(ctx) {
+    if (ctx.trigger === "npc_talk") return buildNpcMessages(ctx);
     var langLine = {
       zh: "用简体中文写 2～4 句。像地质师走进地下工程：具体感官，不要游戏数值，不要自称 AI。",
       en: "Write 2–4 sentences in English. Sensory, specific, no stats, do not mention being an AI.",
@@ -158,7 +200,10 @@ var LLM = (function () {
   }
 
   function localRngFor(ctx) {
-    return RNG.fromSeed(ctx.seed + "|" + ctx.trigger + "|" + ctx.roomId + "|" + ctx.x + "," + ctx.y);
+    var npc = ctx.trigger === "npc_talk"
+      ? "|" + (ctx.npcState || "") + "|" + (ctx.npcOption || "")
+      : "";
+    return RNG.fromSeed(ctx.seed + "|" + ctx.trigger + "|" + ctx.roomId + "|" + ctx.x + "," + ctx.y + npc);
   }
 
   /**

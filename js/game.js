@@ -16,11 +16,13 @@ var Game = {
   fovOn: true,
   explored: null,
   visible: null,
+  talking: false,
 
   boot: function () {
     Game.canvas = document.getElementById("dungeon");
     Game.ctx = Game.canvas.getContext("2d");
     Events.bind(document.getElementById("log"), document.getElementById("status"));
+    NPC.bind();
     Game._bindUi();
     Game._bindKeys();
     window.addEventListener("resize", function () { Game._fitCanvas(); Game.draw(); });
@@ -41,9 +43,12 @@ var Game = {
   newRun: function (seedText) {
     LLM.clearCache();
     Events.reset();
+    NPC.resetRuntime();
     Game.reachedExit = false;
     Game.over = false;
+    Game.talking = false;
     Game.map = Dungeon.generate(seedText);
+    NPC.place(Game.map);
     Game.player.x = Game.map.entrance.x;
     Game.player.y = Game.map.entrance.y;
     Game.explored = FOV.blank(Game.map.width, Game.map.height, false);
@@ -93,7 +98,7 @@ var Game = {
   },
 
   tryMove: function (dx, dy) {
-    if (Game.busy || Game.over || Events.dead) return;
+    if (Game.busy || Game.over || Events.dead || Game.talking) return;
     var x = Game.player.x + dx;
     var y = Game.player.y + dy;
     if (!Dungeon.walkable(Game.map, x, y)) return;
@@ -107,6 +112,8 @@ var Game = {
       if (kind === "dead") Game.over = true;
       Game._refreshFov();
       Game.draw();
+      if (!Game.over && !Events.dead) NPC.afterMove(Game);
+      Game._syncNpcHint();
     });
   },
 
@@ -124,7 +131,20 @@ var Game = {
         }
         return;
       }
-      if (ev.key === "Enter" && Game.reachedExit && !Game.over) {
+      if (ev.key === "Escape") {
+        if (NPC.cancelIfGreeting()) {
+          ev.preventDefault();
+          Game._syncNpcHint();
+        }
+        return;
+      }
+      if (ev.key === "e" || ev.key === "E") {
+        ev.preventDefault();
+        if (!Game.over && !Events.dead) NPC.tryKeyTalk(Game);
+        Game._syncNpcHint();
+        return;
+      }
+      if (ev.key === "Enter" && Game.reachedExit && !Game.over && !Game.talking) {
         ev.preventDefault();
         Game.newRun(Game.map.seed + "-down");
         return;
@@ -195,6 +215,7 @@ var Game = {
       });
     }
     Game._syncFovButton();
+    Game._syncNpcHint();
     syncMode();
   },
 
@@ -246,7 +267,9 @@ var Game = {
       }
     }
     Game._drawPlayer();
+    Game._drawNpc();
     if (!Game.fovOn) Game._drawVignette();
+    Game._syncNpcHint();
   },
 
   _drawFalloff: function (x, y) {
@@ -301,7 +324,7 @@ var Game = {
     if (kind === TILE.ENTRANCE) Game._stairs(px, py, t, "#d7b56a");
     if (kind === TILE.EXIT) Game._stairs(px, py, t, "#7ec8c4");
     if (kind === TILE.ITEM) Game._gem(px, py, t, "#e2b84a", memory);
-    if (kind === TILE.EVENT) Game._rune(px, py, t, memory);
+    if (kind === TILE.EVENT) Game._rune(px, py, t, memory, x, y);
     ctx.restore();
     if (memory) {
       ctx.fillStyle = "rgba(8, 12, 20, 0.5)";
@@ -336,12 +359,15 @@ var Game = {
     ctx.restore();
   },
 
-  _rune: function (px, py, t, memory) {
+  _rune: function (px, py, t, memory, x, y) {
     var ctx = Game.ctx;
     var cx = px + t / 2;
     var cy = py + t / 2;
+    var warned = Events.warnedEvent && Events.warnedEvent.x === x && Events.warnedEvent.y === y;
     var pulse = memory ? 0.28 : 0.45 + 0.25 * Math.sin(Game.time / 280 + px);
-    ctx.strokeStyle = "rgba(186, 132, 232," + pulse + ")";
+    ctx.strokeStyle = warned
+      ? "rgba(220, 140, 70," + pulse + ")"
+      : "rgba(186, 132, 232," + pulse + ")";
     ctx.lineWidth = 1.4;
     ctx.beginPath();
     ctx.arc(cx, cy, t * 0.22, 0, Math.PI * 2);
@@ -350,6 +376,12 @@ var Game = {
     ctx.moveTo(cx, cy - t * 0.16);
     ctx.lineTo(cx, cy + t * 0.16);
     ctx.stroke();
+    if (warned && !memory) {
+      ctx.beginPath();
+      ctx.moveTo(cx - t * 0.12, cy);
+      ctx.lineTo(cx + t * 0.12, cy);
+      ctx.stroke();
+    }
   },
 
   _drawPlayer: function () {
@@ -375,6 +407,44 @@ var Game = {
     ctx.beginPath();
     ctx.arc(cx, cy, Math.max(1.2, t * 0.1), 0, Math.PI * 2);
     ctx.fill();
+  },
+
+  _drawNpc: function () {
+    if (!Game.map || !Game.map.npc) return;
+    var n = Game.map.npc;
+    var vis = !Game.fovOn || Game._isVisible(n.x, n.y);
+    var mem = Game.fovOn && !vis && Game._isExplored(n.x, n.y);
+    if (!vis && !mem) return;
+    var ctx = Game.ctx;
+    var t = Game.tile;
+    var cx = n.x * t + t / 2;
+    var cy = n.y * t + t / 2;
+    ctx.save();
+    if (mem) ctx.globalAlpha = 0.4;
+    var pulse = mem ? 0.2 : 0.35 + 0.12 * Math.sin(Game.time / 220);
+    ctx.fillStyle = "rgba(126, 168, 164," + pulse + ")";
+    ctx.beginPath();
+    ctx.arc(cx, cy - t * 0.06, t * 0.38, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = mem ? "#5a6e6c" : "#c5ddd8";
+    ctx.beginPath();
+    ctx.arc(cx, cy - t * 0.16, Math.max(1.8, t * 0.13), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = mem ? "#3d4f4c" : "#7ea8a4";
+    ctx.fillRect(cx - t * 0.12, cy - t * 0.04, t * 0.24, t * 0.28);
+    ctx.strokeStyle = mem ? "#8a7a50" : "#d7b56a";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(cx + t * 0.14, cy + t * 0.22);
+    ctx.lineTo(cx + t * 0.14, cy - t * 0.28);
+    ctx.stroke();
+    ctx.restore();
+  },
+
+  _syncNpcHint: function () {
+    var el = document.getElementById("npc-hint");
+    if (!el) return;
+    el.textContent = NPC.hintText(Game);
   },
 
   _drawVignette: function () {

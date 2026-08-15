@@ -221,7 +221,8 @@ var GM = (function () {
       visited: extra.visited != null ? extra.visited : (typeof Events !== "undefined" ? visitedCount(Events) : 0),
       seed: game && game.map ? game.map.seed : "stardust",
       x: extra.x || 0,
-      y: extra.y || 0
+      y: extra.y || 0,
+      warned: extra.warned != null ? extra.warned : (typeof Events !== "undefined" ? !!Events.warned : false)
     };
   }
 
@@ -242,6 +243,7 @@ var GM = (function () {
       if (state.hp <= 2) return 0;
       if (state.hp <= 4) w -= 2;
       if (state.visited >= 6) w += 2;
+      if (state.warned) w += 3;
     }
     if (t === "item" && state.inventory.length >= 5) w -= 2;
     if (t === "swap" && state.inventory.length === 0) w += 1;

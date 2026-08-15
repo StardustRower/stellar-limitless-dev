@@ -172,8 +172,10 @@ canvas#dungeon {
 .swatch.exit { background: #7ec8c4; }
 .swatch.item { background: #e2b84a; }
 .swatch.event { background: #ba84e8; }
+.swatch.npc { background: #7ea8a4; }
 .swatch.unseen { background: #000; border: 1px solid #3a3126; }
 .swatch.memory { background: #2a2e38; }
+#npc-hint { color: #7ea8a4; }
 
 .vitals {
   display: flex;
@@ -226,6 +228,55 @@ canvas#dungeon {
   color: var(--gold);
   border-bottom: 1px solid var(--line);
 }
+
+.talk-panel {
+  padding: 10px 14px 12px;
+  border-bottom: 1px solid var(--line);
+  background: #1a1612;
+}
+.talk-panel[hidden] { display: none !important; }
+.talk-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  margin-bottom: 8px;
+  color: var(--muted);
+}
+.talk-head strong { color: var(--teal); }
+#talk-line {
+  margin: 0 0 10px;
+  font-family: Georgia, "Songti SC", "Noto Serif SC", serif;
+  font-size: 14px;
+  line-height: 1.65;
+  color: #f0e6d4;
+  white-space: pre-wrap;
+}
+#talk-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+#talk-options button,
+button.talk-opt {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-color: #4a6a66;
+  background: linear-gradient(#243330, #1a2422);
+  color: #c5ddd8;
+}
+#talk-options button:hover { filter: brightness(1.1); }
+#talk-options button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: none;
+}
+.talk-hint {
+  margin: 8px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
 #log {
   flex: 1;
   overflow: auto;
