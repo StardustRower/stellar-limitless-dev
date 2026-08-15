@@ -12,6 +12,10 @@ var Game = {
   time: 0,
   busy: false,
   reachedExit: false,
+  over: false,
+  fovOn: true,
+  explored: null,
+  visible: null,
 
   boot: function () {
     Game.canvas = document.getElementById("dungeon");
@@ -38,9 +42,12 @@ var Game = {
     LLM.clearCache();
     Events.reset();
     Game.reachedExit = false;
+    Game.over = false;
     Game.map = Dungeon.generate(seedText);
     Game.player.x = Game.map.entrance.x;
     Game.player.y = Game.map.entrance.y;
+    Game.explored = FOV.blank(Game.map.width, Game.map.height, false);
+    Game._refreshFov();
     document.getElementById("seed").value = Game.map.seed;
     document.getElementById("seed-echo").textContent = Game.map.seed;
     document.getElementById("room-count").textContent = String(Game.map.rooms.length);
@@ -51,6 +58,19 @@ var Game = {
       Game.busy = false;
       Game.draw();
     });
+  },
+
+  _refreshFov: function () {
+    if (!Game.map) return;
+    Game.visible = FOV.compute(Game.map, Game.player.x, Game.player.y, FOV.RADIUS, Game.explored);
+  },
+
+  _isVisible: function (x, y) {
+    return Game.visible && Game.visible[y] && Game.visible[y][x];
+  },
+
+  _isExplored: function (x, y) {
+    return Game.explored && Game.explored[y] && Game.explored[y][x];
   },
 
   _fitCanvas: function () {
@@ -73,16 +93,19 @@ var Game = {
   },
 
   tryMove: function (dx, dy) {
-    if (Game.busy) return;
+    if (Game.busy || Game.over || Events.dead) return;
     var x = Game.player.x + dx;
     var y = Game.player.y + dy;
     if (!Dungeon.walkable(Game.map, x, y)) return;
     var tile = Game.map.grid[y][x];
     Game.player.x = x;
     Game.player.y = y;
+    Game._refreshFov();
     Game.draw();
     Events.onMove(Game, x, y, tile).then(function (kind) {
       if (kind === "exit") Game.reachedExit = true;
+      if (kind === "dead") Game.over = true;
+      Game._refreshFov();
       Game.draw();
     });
   },
@@ -101,9 +124,14 @@ var Game = {
         }
         return;
       }
-      if (ev.key === "Enter" && Game.reachedExit) {
+      if (ev.key === "Enter" && Game.reachedExit && !Game.over) {
         ev.preventDefault();
         Game.newRun(Game.map.seed + "-down");
+        return;
+      }
+      if (ev.key === "f" || ev.key === "F") {
+        ev.preventDefault();
+        Game._setFovOn(!Game.fovOn);
         return;
       }
       var d = map[ev.key];
@@ -160,7 +188,30 @@ var Game = {
       var panel = document.getElementById("api-panel");
       panel.hidden = !panel.hidden;
     });
+    var fovBtn = document.getElementById("toggle-fov");
+    if (fovBtn) {
+      fovBtn.addEventListener("click", function () {
+        Game._setFovOn(!Game.fovOn);
+      });
+    }
+    Game._syncFovButton();
     syncMode();
+  },
+
+  _setFovOn: function (on) {
+    Game.fovOn = !!on;
+    Game._syncFovButton();
+    Game.draw();
+  },
+
+  _syncFovButton: function () {
+    var btn = document.getElementById("toggle-fov");
+    if (!btn) return;
+    btn.classList.toggle("is-on", Game.fovOn);
+    btn.textContent = Game.fovOn ? "火把视野" : "全图（学习）";
+    btn.title = Game.fovOn
+      ? "默认：只看见火把半径。点此显示全图（学习/调试，不会把全图记成已探索）。"
+      : "正在显示全图。点此回到火把视野。";
   },
 
   _hash: function (x, y) {
@@ -182,19 +233,33 @@ var Game = {
     var w = Game.map.width;
     var h = Game.map.height;
     ctx.clearRect(0, 0, w * t, h * t);
-    ctx.fillStyle = "#0b0908";
+    ctx.fillStyle = "#000000";
     ctx.fillRect(0, 0, w * t, h * t);
 
     for (var y = 0; y < h; y++) {
       for (var x = 0; x < w; x++) {
-        Game._drawTile(x, y);
+        var vis = !Game.fovOn || Game._isVisible(x, y);
+        var mem = Game.fovOn && !vis && Game._isExplored(x, y);
+        if (Game.fovOn && !vis && !mem) continue;
+        Game._drawTile(x, y, mem);
+        if (vis && Game.fovOn) Game._drawFalloff(x, y);
       }
     }
     Game._drawPlayer();
-    Game._drawVignette();
+    if (!Game.fovOn) Game._drawVignette();
   },
 
-  _drawTile: function (x, y) {
+  _drawFalloff: function (x, y) {
+    var dx = x - Game.player.x;
+    var dy = y - Game.player.y;
+    var fall = Math.sqrt(dx * dx + dy * dy) / FOV.RADIUS;
+    if (fall <= 0) return;
+    var a = Math.min(0.62, fall * fall * 0.72);
+    Game.ctx.fillStyle = "rgba(0,0,0," + a + ")";
+    Game.ctx.fillRect(x * Game.tile, y * Game.tile, Game.tile, Game.tile);
+  },
+
+  _drawTile: function (x, y, memory) {
     var ctx = Game.ctx;
     var t = Game.tile;
     var px = x * t;
@@ -203,12 +268,20 @@ var Game = {
     var n = Game._hash(x, y);
     var room = Game.map.roomAt[y][x];
 
+    ctx.save();
+    if (memory) ctx.globalAlpha = 0.4;
+
     if (kind === TILE.WALL) {
       var shade = 18 + Math.floor(n * 14);
       ctx.fillStyle = "rgb(" + shade + "," + (shade - 3) + "," + (shade - 6) + ")";
       ctx.fillRect(px, py, t, t);
       ctx.fillStyle = "rgba(255,255,255,0.04)";
       ctx.fillRect(px, py, t, 1);
+      ctx.restore();
+      if (memory) {
+        ctx.fillStyle = "rgba(8, 10, 16, 0.45)";
+        ctx.fillRect(px, py, t, t);
+      }
       return;
     }
 
@@ -227,8 +300,13 @@ var Game = {
 
     if (kind === TILE.ENTRANCE) Game._stairs(px, py, t, "#d7b56a");
     if (kind === TILE.EXIT) Game._stairs(px, py, t, "#7ec8c4");
-    if (kind === TILE.ITEM) Game._gem(px, py, t, "#e2b84a");
-    if (kind === TILE.EVENT) Game._rune(px, py, t);
+    if (kind === TILE.ITEM) Game._gem(px, py, t, "#e2b84a", memory);
+    if (kind === TILE.EVENT) Game._rune(px, py, t, memory);
+    ctx.restore();
+    if (memory) {
+      ctx.fillStyle = "rgba(8, 12, 20, 0.5)";
+      ctx.fillRect(px, py, t, t);
+    }
   },
 
   _stairs: function (px, py, t, color) {
@@ -241,7 +319,7 @@ var Game = {
     }
   },
 
-  _gem: function (px, py, t, color) {
+  _gem: function (px, py, t, color, memory) {
     var ctx = Game.ctx;
     var cx = px + t / 2;
     var cy = py + t / 2;
@@ -250,17 +328,19 @@ var Game = {
     ctx.translate(cx, cy);
     ctx.rotate(Math.PI / 4);
     ctx.fillStyle = color;
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 6;
+    if (!memory) {
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 6;
+    }
     ctx.fillRect(-r, -r, r * 2, r * 2);
     ctx.restore();
   },
 
-  _rune: function (px, py, t) {
+  _rune: function (px, py, t, memory) {
     var ctx = Game.ctx;
     var cx = px + t / 2;
     var cy = py + t / 2;
-    var pulse = 0.45 + 0.25 * Math.sin(Game.time / 280 + px);
+    var pulse = memory ? 0.28 : 0.45 + 0.25 * Math.sin(Game.time / 280 + px);
     ctx.strokeStyle = "rgba(186, 132, 232," + pulse + ")";
     ctx.lineWidth = 1.4;
     ctx.beginPath();
@@ -278,14 +358,16 @@ var Game = {
     var cx = Game.player.x * t + t / 2;
     var cy = Game.player.y * t + t / 2;
     var flicker = 0.55 + 0.15 * Math.sin(Game.time / 140);
-    var g = ctx.createRadialGradient(cx, cy, 2, cx, cy, t * 2.4);
+    if (Game.over) flicker = 0.15;
+    var glowR = Game.fovOn ? t * 3.2 : t * 2.4;
+    var g = ctx.createRadialGradient(cx, cy, 2, cx, cy, glowR);
     g.addColorStop(0, "rgba(232, 176, 84," + (0.28 * flicker) + ")");
     g.addColorStop(1, "rgba(232, 176, 84, 0)");
     ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.arc(cx, cy, t * 2.4, 0, Math.PI * 2);
+    ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "#f3d7a0";
+    ctx.fillStyle = Game.over ? "#6a5340" : "#f3d7a0";
     ctx.beginPath();
     ctx.arc(cx, cy, Math.max(3, t * 0.28), 0, Math.PI * 2);
     ctx.fill();

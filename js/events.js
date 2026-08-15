@@ -1,9 +1,12 @@
 /**
- * 事件层：把「踩到格子」翻译成「该生成哪段叙事」。
+ * 事件层：把「踩到格子」翻译成「该生成哪段叙事」，并执行 GM 给出的数值。
  *
  * 队列/缓存的目的：叙事必须感觉是立刻出现的。
  * 本地引擎本身就快；API 模式则提前为相邻房间预取。
  * 同一 seed + 同一房间，描述应稳定，所以钥匙交给 LLM 缓存。
+ *
+ * HP / 背包 / 已探房间是运行时状态：换一条路，主持人会给你不同的下一格异兆。
+ * 它们不写进地图生成，所以种子复现的是布局，不是你这一局的血量。
  */
 var Events = {
   logEl: null,
@@ -13,6 +16,9 @@ var Events = {
   steps: 0,
   lastRoomId: null,
   sourceTag: "local",
+  hp: 10,
+  maxHp: 10,
+  dead: false,
 
   bind: function (logEl, statusEl) {
     Events.logEl = logEl;
@@ -25,7 +31,10 @@ var Events = {
     Events.steps = 0;
     Events.lastRoomId = null;
     Events.sourceTag = "local";
+    Events.hp = Events.maxHp;
+    Events.dead = false;
     if (Events.logEl) Events.logEl.innerHTML = "";
+    Events.syncHud("入口");
   },
 
   pushLog: function (title, body, meta) {
@@ -89,21 +98,68 @@ var Events = {
     LLM.prefetch(list.slice(0, 4));
   },
 
-  applyResult: function (title, result) {
+  applyResult: function (title, result, extraMeta) {
     Events.sourceTag = result.source;
     var meta = result.source === "api" ? "API"
       : result.source === "cache" ? "缓存"
         : result.source === "local-fallback" ? "本地回退" : "本地规则";
+    if (result.gmSource === "api") meta = "GM·API · " + meta;
+    else if (result.gmSource === "local-fallback") meta = "GM·本地回退 · " + meta;
+    else if (result.gmSource === "local") meta = "GM · " + meta;
+    if (extraMeta) meta += " · " + extraMeta;
     if (result.error) meta += " · " + result.error;
     Events.pushLog(title, result.text, meta);
     Events.refreshStatus(title);
     return result;
   },
 
+  visitedCount: function () {
+    return Object.keys(Events.visitedRooms).length;
+  },
+
+  mechanicLine: function (outcome) {
+    if (!outcome) return "";
+    var bits = [];
+    if (outcome.type === "damage") bits.push("HP " + outcome.beforeHp + "→" + outcome.afterHp);
+    else if (outcome.type === "heal") bits.push("HP " + outcome.beforeHp + "→" + outcome.afterHp);
+    if (outcome.gained) bits.push("获得 " + outcome.gained);
+    if (outcome.lost) bits.push("换出 " + outcome.lost);
+    return bits.join(" · ");
+  },
+
   refreshStatus: function (roomTitle) {
     if (!Events.statusEl) return;
     var bag = Events.inventory.length ? Events.inventory.join(" · ") : "空";
-    Events.statusEl.textContent = roomTitle + "  ·  步数 " + Events.steps + "  ·  背包 " + bag;
+    var hp = "HP " + Events.hp + "/" + Events.maxHp;
+    Events.statusEl.textContent = roomTitle + "  ·  " + hp + "  ·  步数 " + Events.steps + "  ·  已探 " + Events.visitedCount() + " 房  ·  背包 " + bag;
+    if (Events.dead) Events.statusEl.textContent += "  ·  灯灭";
+    Events.syncHud(roomTitle);
+  },
+
+  syncHud: function (roomTitle) {
+    var hpEl = document.getElementById("hp-num");
+    var fill = document.getElementById("hp-fill");
+    var visEl = document.getElementById("visited-count");
+    if (hpEl) hpEl.textContent = String(Events.hp);
+    if (fill) {
+      var pct = Math.max(0, Math.min(100, (Events.hp / Events.maxHp) * 100));
+      fill.style.width = pct + "%";
+      fill.classList.toggle("is-low", Events.hp <= 3);
+      fill.classList.toggle("is-ok", Events.hp >= 7);
+    }
+    if (visEl) visEl.textContent = String(Events.visitedCount());
+    var banner = document.getElementById("run-banner");
+    if (banner) {
+      if (Events.dead) {
+        banner.hidden = false;
+        banner.textContent = "灯灭了。点「重生此地」或「换一颗种子」。";
+        banner.className = "run-banner is-dead";
+      } else {
+        banner.hidden = true;
+        banner.textContent = "";
+        banner.className = "run-banner";
+      }
+    }
   },
 
   onStart: async function (game) {
@@ -145,16 +201,47 @@ var Events = {
 
     if (tile === TILE.EVENT) {
       game.map.grid[y][x] = room ? TILE.FLOOR : TILE.CORRIDOR;
-      var ev = await LLM.describe(Events.contextFrom(game, {
-        trigger: room ? "event" : "corridor",
+      var choice = await GM.choose(game, {
+        room: room,
+        kind: room ? room.kind : "corridor",
+        x: x,
+        y: y,
+        hp: Events.hp,
+        maxHp: Events.maxHp,
+        inventory: Events.inventory.slice(),
+        visited: Events.visitedCount()
+      });
+      var outcome = GM.apply(Events, choice.event);
+      Events.syncHud(room ? room.nameZh : "走廊");
+      if (outcome.dead && typeof Game !== "undefined") Game.over = true;
+      var gmCtx = Events.contextFrom(game, {
+        trigger: "gm_event",
         room: room,
         kind: room ? room.kind : "corridor",
         nameZh: room ? room.nameZh : "走廊",
         nameEn: room ? room.nameEn : "Corridor",
         x: x,
-        y: y
-      }));
-      Events.applyResult(room ? "异兆 · " + room.nameZh : "走廊异兆", ev);
+        y: y,
+        more: {
+          gmEvent: choice.event,
+          gmIntent: GM.effectHint(choice.event)
+        }
+      });
+      var ev = await LLM.describe(gmCtx);
+      ev.gmSource = choice.source;
+      if (choice.error) ev.error = (ev.error ? ev.error + " · " : "") + choice.error;
+      var title = "异兆 · " + choice.event.nameZh;
+      Events.applyResult(title, ev, Events.mechanicLine(outcome));
+      if (outcome.dead) {
+        var over = await LLM.describe(Events.contextFrom(game, {
+          trigger: "game_over",
+          room: room,
+          x: x,
+          y: y
+        }));
+        Events.applyResult("灯灭", over);
+        return "dead";
+      }
       return "event";
     }
 
