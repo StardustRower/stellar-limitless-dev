@@ -32,6 +32,8 @@ app = FastAPI(
 
 # 浏览器可能从 file://、:8000 或本服务的 :8765 打开页面。
 # 本地演示允许任何来源；这里没有密钥，也不该有。
+# Godot 的 HTTPRequest 不是浏览器：它不看 CORS，也不带 Origin。
+# 本服务不检查 User-Agent。Godot 默认 UA 类似 GodotEngine/4.x，无需改路由。
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

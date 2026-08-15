@@ -3,8 +3,8 @@ extends RefCounted
 ## 灰岩的状态表：从 js/npc-table.js 抄进 Godot 的 Dictionary。
 ## 不要在这一课另写一套问候/交易/告别——改 next / heal，应和 HTML 演示同一张图。
 ##
-## 下一课可以让按钮去问同一本 FastAPI 旗标账本（server/ledger.py）。
-## 不是这一课：这一课只证明表能站进 Godot 的节点树，不接 HTTP、不接 LLM。
+## 账本在 memory.gd：只记四个旗标。本文件仍然不接 HTTP、不接 LLM。
+## 改 next / heal，应和 HTML 演示同一张图；不要在这里发明第二套跳转。
 
 const TRADE_HEAL := 3
 const OIL_ZH := "一小壶灯油"
