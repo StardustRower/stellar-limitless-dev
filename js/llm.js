@@ -2,7 +2,7 @@
  * LLM 适配器：同一套「给我一段地牢叙事」接口，底下可换引擎。
  *
  * 本地规则引擎（默认）：模板 + 词库组合，离线、瞬时、可复现。
- * HTTP API：OpenAI 兼容的 /chat/completions；失败立刻回退本地，不让游戏卡住。
+ * 对话时只准写当前状态的台词。跨层记忆只准看到旗标，禁止塞聊天记录。
  *
  * 密钥只进 localStorage，绝不写进代码。这是演示级安全底线。
  */
@@ -71,7 +71,14 @@ var LLM = (function () {
   function cacheKey(ctx) {
     var gm = ctx.gmEvent && ctx.gmEvent.id ? ctx.gmEvent.id : "";
     var npc = ctx.trigger === "npc_talk"
-      ? (ctx.npcState || "") + ":" + (ctx.npcOption || "")
+      ? [
+          ctx.npcState || "",
+          ctx.npcOption || "",
+          ctx.npcMet ? "met" : "",
+          ctx.npcTraded ? "traded" : "",
+          ctx.npcWarned ? "warned" : "",
+          ctx.npcLastState || ""
+        ].join(":")
       : "";
     return [ctx.seed, ctx.lang, ctx.trigger, ctx.roomId, ctx.kind, ctx.x, ctx.y, gm, npc].join("|");
   }
@@ -143,11 +150,16 @@ var LLM = (function () {
     sys += langLine[ctx.lang] || langLine.zh;
     sys += " Speak ONLY as this NPC in the current dialogue state. Never invent HP, damage, gold, or items.";
     sys += " Never change numbers. Never skip to another state. Do not give the player objects that are not already in the engine table.";
+    sys += " You know ONLY the boolean flags below from a ledger. You do NOT have a conversation transcript.";
+    sys += " Do not invent memories of specific sentences the player said. Do not quote a chat log you were not given.";
     if (ctx.npcState === "trade") {
       sys += " The engine already swapped a survey page for lamp oil and applied the table's heal. Imply warmth; never say +HP or a digit.";
     }
     if (ctx.npcState === "warn") {
       sys += " You warn about a marked omen tile ahead. Do not invent monsters, new rooms, or loot.";
+    }
+    if (ctx.npcState === "greet" && ctx.npcMet) {
+      sys += " You have met this person on this survey line before. Acknowledge only the flags (traded/warned/last_state). Do not invent a scene or quote lines from a previous floor.";
     }
     var user = [
       "state=" + ctx.npcState,
@@ -157,8 +169,10 @@ var LLM = (function () {
       "hp=" + ctx.hp + "/" + ctx.maxHp + " (never state the number; you may imply fatigue or relief)",
       ctx.inventory && ctx.inventory.length ? "carrying=" + ctx.inventory.join(", ") : "carrying=nothing",
       "room=" + ctx.nameZh + " / " + ctx.nameEn,
+      "met=" + (ctx.npcMet ? "yes" : "no"),
       "traded=" + (ctx.npcTraded ? "yes" : "no"),
       "warned=" + (ctx.npcWarned ? "yes" : "no"),
+      "last_state=" + (ctx.npcLastState || "idle") + " (previous survey-line state; not a transcript)",
       "seed=" + ctx.seed
     ];
     return [

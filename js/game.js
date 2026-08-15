@@ -44,6 +44,7 @@ var Game = {
     LLM.clearCache();
     Events.reset();
     NPC.resetRuntime();
+    if (typeof Memory !== "undefined") Memory.resetStatus();
     Game.reachedExit = false;
     Game.over = false;
     Game.talking = false;
@@ -59,9 +60,15 @@ var Game = {
     Game._fitCanvas();
     Game.draw();
     Game.busy = true;
-    Events.onStart(Game).finally(function () {
+    var start = Events.onStart(Game);
+    var mem = (typeof Memory !== "undefined" && Memory.hydrate)
+      ? Memory.hydrate(Game.map.npc, Game.map.seed)
+      : Promise.resolve();
+    if (typeof Memory !== "undefined") Memory.pending = mem;
+    Promise.all([start, mem]).finally(function () {
       Game.busy = false;
       Game.draw();
+      if (typeof Memory !== "undefined") Memory.syncHud();
     });
   },
 

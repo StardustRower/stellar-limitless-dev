@@ -8,6 +8,9 @@
  * 请分开记：
  * - 表（本文件）：状态、选项、下一跳、交易给哪件物品、治疗几点。
  * - LLM（js/llm.js）：只把「当前状态 + 玩家点了哪一项」写成句子。
+ * - 账本（js/memory.js + 可选的 FastAPI）：只记 met / traded / warned / last_state。
+ *   下行会扔掉这一局的 JS 对象；旗标若还在账本里，他仍认得你换过油。
+ *   失败就失忆。绝不把聊天记录塞进下一层的提示词。
  *
  * 测绘员是叠加层：生成地牢时不掷骰、不改格子。
  * 所以同一颗种子仍是同一张图，只是哨所（或圣所）多站了一个人。
@@ -105,6 +108,46 @@ var NPC = (function () {
         en: [
           "The flame finds a face filmed with rock flour. He leans on the watch-wall, a geology hammer still in his belt, like a shift that never handed over. \"Stay off that survey line,\" he says, dry as a core tag.",
           "He has stood long enough for salt frost to rim his boots. The sleeve-badge is a former surveyor's, not a ghost's. \"Here for the line too?\" He does not step aside."
+        ]
+      },
+      return_met: {
+        zh: [
+          "他看了你一眼，像核对测线编号，不是认一张脸。「你下来了。这一层换了图，人还是上一次那个。」锤柄点了点靴帮，没有寒暄。",
+          "「同一条测线。」他说，并不问你叫什么。「我记得见过你。别把这当成故事会，我没有你的聊天记录。」"
+        ],
+        en: [
+          "He checks you the way one checks a line number, not a face. \"You came down. New map. Same person.\" The hammer-haft ticks the boot. No small talk.",
+          "\"Same survey line,\" he says, and does not ask your name. \"I remember meeting you. This is not a story circle. I keep no transcript.\""
+        ]
+      },
+      return_traded: {
+        zh: [
+          "他的目光在你空着的手上停了一拍。「油在上一层。页在我这边。这一层我不再换第二次——不是小气，是测区规则。」",
+          "「你换过油。」他像读岩芯标签那样读你。「背包可以空，账不能空。别拿残页来问第二次。」"
+        ],
+        en: [
+          "His gaze pauses on your empty hands. \"Oil stayed on the last level. The page stayed with me. I will not trade twice — not spite. Survey rules.\"",
+          "\"You already traded.\" He reads you like a core tag. \"A pack can be empty. A ledger cannot. Do not bring another scrap to ask again.\""
+        ]
+      },
+      return_warned: {
+        zh: [
+          "「警告说过了。」他朝更黑的地方抬了抬下巴，并不去指这一层的哪一格。「我记得你听见过。新的地图不会把旧坐标还给我。」",
+          "他不再划那条短线。「你被警告过。这一层的异兆要自己用脚测。我不会把同一句话再发明一遍。」"
+        ],
+        en: [
+          "\"The warning is spent.\" He lifts his chin toward darker rock and does not point at a tile on this map. \"I remember you heard. A new map will not give me the old coordinates.\"",
+          "He does not draw the short line again. \"You were warned. Survey this level's omens with your feet. I will not invent the same sentence twice.\""
+        ]
+      },
+      return_both: {
+        zh: [
+          "他几乎没有抬头。「油换过。警告听过。你还下来，说明灯还亮着。」野簿合着，像一栏已经勾完的表。",
+          "「两件事都记着：页换了油，路被标过。」他让开半肩，仍不让路。「这一层没有新的交易，也没有第二遍良心。」"
+        ],
+        en: [
+          "He barely looks up. \"Oil traded. Warning heard. You came down, so the flame still lives.\" The field book stays shut, a form with both boxes ticked.",
+          "\"Two facts: page for oil, the way marked.\" He gives you half a shoulder, not the path. \"No second trade on this level. No second conscience.\""
         ]
       }
     },
@@ -373,7 +416,9 @@ var NPC = (function () {
       titleEn: "former surveyor",
       state: "idle",
       traded: false,
-      warned: false
+      warned: false,
+      met: false,
+      last_state: "idle"
     };
     return map.npc;
   }
@@ -413,6 +458,15 @@ var NPC = (function () {
     if (typeof Game !== "undefined") Game.talking = !!on;
   }
 
+  function greetOpenBank(ctx) {
+    var pack = LINES.greet;
+    if (!ctx.npcMet) return pack.open;
+    if (ctx.npcTraded && ctx.npcWarned) return pack.return_both;
+    if (ctx.npcTraded) return pack.return_traded;
+    if (ctx.npcWarned) return pack.return_warned;
+    return pack.return_met;
+  }
+
   function localLine(ctx) {
     var lang = ctx.lang || "zh";
     if (lang === "mix") {
@@ -422,6 +476,9 @@ var NPC = (function () {
     }
     var pack = LINES[ctx.npcState] || {};
     var bank = pack[ctx.npcOption] || pack.open || pack.reopen;
+    if (ctx.npcState === "greet" && (ctx.npcOption === "open" || !ctx.npcOption)) {
+      bank = greetOpenBank(ctx);
+    }
     if (!bank) {
       var keys = Object.keys(pack);
       if (keys.length) bank = pack[keys[0]];
@@ -434,6 +491,9 @@ var NPC = (function () {
     var list = lang === "en" ? bank.en : bank.zh;
     var rng = RNG.fromSeed(
       (ctx.seed || "stardust") + "|npc|" + ctx.npcState + "|" + (ctx.npcOption || "open")
+      + "|m" + (ctx.npcMet ? "1" : "0")
+      + "|t" + (ctx.npcTraded ? "1" : "0")
+      + "|w" + (ctx.npcWarned ? "1" : "0")
     );
     return rng.pick(list);
   }
@@ -572,8 +632,10 @@ var NPC = (function () {
         npcOptionLabel: optionLabel || optionId,
         npcNameZh: npc.nameZh,
         npcNameEn: npc.nameEn,
+        npcMet: !!npc.met,
         npcTraded: npc.traded,
         npcWarned: npc.warned,
+        npcLastState: npc.last_state || "idle",
         hp: Events.hp,
         maxHp: Events.maxHp
       }
@@ -590,6 +652,7 @@ var NPC = (function () {
     if (!next) return { ok: false, error: "未知状态" };
     if (nextId === "done") {
       npc.state = "done";
+      persistFlags(game, npc);
       closeTalk();
       return { ok: true };
     }
@@ -622,7 +685,17 @@ var NPC = (function () {
       }
     }
     renderOptions(game, npc);
+    persistFlags(game, npc);
     return { ok: true, outcome: outcome };
+  }
+
+  function persistFlags(game, npc) {
+    if (!npc) return;
+    if (npc.state && npc.state !== "idle") npc.met = true;
+    npc.last_state = npc.state || npc.last_state || "idle";
+    if (typeof Memory === "undefined" || !Memory.rememberLater) return;
+    var seed = game && game.map ? game.map.seed : "";
+    Memory.rememberLater(seed, npc);
   }
 
   async function pick(game, optionId) {
@@ -656,6 +729,11 @@ var NPC = (function () {
     if (!game || !game.map || !game.map.npc) return;
     bind();
     var npc = game.map.npc;
+    if (typeof Memory !== "undefined" && Memory.hydrate) {
+      try {
+        await Memory.hydrate(npc, game.map.seed);
+      } catch (err) { /* 失忆：用这一局还记得的旗标继续 */ }
+    }
     open = true;
     setTalking(true);
     if (panel) panel.hidden = false;
@@ -671,6 +749,7 @@ var NPC = (function () {
         waiting = false;
       }
       renderOptions(game, npc);
+      persistFlags(game, npc);
       return;
     }
     if (npc.state === "idle") {
@@ -696,6 +775,7 @@ var NPC = (function () {
     if (npc && npc.state === "greet") {
       npc.state = "idle";
     }
+    if (npc && typeof Game !== "undefined") persistFlags(Game, npc);
     if (typeof Game !== "undefined") Game.draw();
   }
 
