@@ -19,6 +19,8 @@ var Events = {
   hp: 10,
   maxHp: 10,
   dead: false,
+  warned: false,
+  warnedEvent: null,
 
   bind: function (logEl, statusEl) {
     Events.logEl = logEl;
@@ -33,6 +35,8 @@ var Events = {
     Events.sourceTag = "local";
     Events.hp = Events.maxHp;
     Events.dead = false;
+    Events.warned = false;
+    Events.warnedEvent = null;
     if (Events.logEl) Events.logEl.innerHTML = "";
     Events.syncHud("入口");
   },
@@ -209,7 +213,8 @@ var Events = {
         hp: Events.hp,
         maxHp: Events.maxHp,
         inventory: Events.inventory.slice(),
-        visited: Events.visitedCount()
+        visited: Events.visitedCount(),
+        warned: Events.warned
       });
       var outcome = GM.apply(Events, choice.event);
       Events.syncHud(room ? room.nameZh : "走廊");
@@ -231,7 +236,10 @@ var Events = {
       ev.gmSource = choice.source;
       if (choice.error) ev.error = (ev.error ? ev.error + " · " : "") + choice.error;
       var title = "异兆 · " + choice.event.nameZh;
-      Events.applyResult(title, ev, Events.mechanicLine(outcome));
+      var extra = Events.mechanicLine(outcome);
+      var marked = Events.warnedEvent && Events.warnedEvent.x === x && Events.warnedEvent.y === y;
+      if (marked) extra = (extra ? extra + " · " : "") + "灰岩曾警告过这里";
+      Events.applyResult(title, ev, extra);
       if (outcome.dead) {
         var over = await LLM.describe(Events.contextFrom(game, {
           trigger: "game_over",
