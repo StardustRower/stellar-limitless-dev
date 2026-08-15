@@ -363,3 +363,53 @@ button.talk-opt {
   .stage { grid-template-columns: 1fr; }
   .canvas-wrap { min-height: 360px; }
 }
+
+.scene-link {
+  color: var(--teal);
+  text-decoration: none;
+  border-bottom: 1px dashed #4a6a66;
+}
+.scene-link:hover { color: #c5ddd8; }
+
+.vn-app { grid-template-rows: auto auto 1fr auto; }
+.vn-stage { min-height: 560px; }
+.vn-figure-wrap {
+  min-height: 460px;
+  background:
+    radial-gradient(600px 320px at 40% 40%, #2a2118 0%, transparent 60%),
+    #000;
+}
+canvas#vn-figure {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.vn-caption {
+  position: absolute;
+  left: 14px;
+  bottom: 10px;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+.vn-talk .talk-panel { border-bottom: 0; flex: 1; }
+.vn-status {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.vn-status strong { color: var(--ink); font-weight: 600; }
+.talk-meta {
+  margin: -4px 0 10px;
+  font-size: 11px;
+  color: var(--muted);
+}
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.92em;
+  color: #d7b56a;
+}
+
+@media (max-width: 920px) {
+  .vn-figure-wrap { min-height: 320px; }
+}
