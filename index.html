@@ -11,7 +11,7 @@
     <header class="top">
       <div class="brand">
         <h1>STELLAR <span>LIMITLESS</span></h1>
-        <p>无界学习场 · 第三站：一间房里的测绘员</p>
+        <p>无界学习场 · 第四站：测绘员的旗标账本</p>
       </div>
       <div class="controls">
         <label class="field">种子
@@ -64,6 +64,7 @@
             <span>已探 <strong id="visited-count">0</strong> 房</span>
             <span>房间 <strong id="room-count">0</strong> · 引擎 <strong id="engine-label">本地规则</strong></span>
             <span id="npc-hint"></span>
+            <span id="ledger-hint" title="本地旗标账本。没开也能玩，他会失忆。">账本 · …</span>
           </span>
         </div>
         <div class="canvas-wrap">
@@ -87,7 +88,7 @@
       <aside class="story-panel">
         <div class="story-head">
           <strong>地下手记</strong>
-          <span>走进房间、踩上异兆，或走近测绘员。异兆与交易的数字由约束表决定；台词不编造 HP。</span>
+          <span>走进房间、踩上异兆，或走近测绘员。异兆与交易的数字由约束表决定；跨层记忆只有旗标，没有聊天记录。</span>
         </div>
         <div id="status">入口</div>
         <div id="talk-panel" class="talk-panel" hidden>
@@ -97,7 +98,7 @@
           </div>
           <p id="talk-line"></p>
           <div id="talk-options"></div>
-          <p class="talk-hint">选项来自状态表。他不能跳状态、不能改 HP、不能发明表外的物品。</p>
+          <p class="talk-hint">选项来自状态表。记忆只有旗标（见过面 / 交易过 / 警告过 / 上次停在哪一态），没有聊天记录。</p>
         </div>
         <div id="log" aria-live="polite"></div>
       </aside>
@@ -109,8 +110,9 @@
         火把只照附近；按 <kbd>F</kbd> 可切到全图（学习用，不会把没走过的地方记成已探索）。
         走到青色阶梯后按 <kbd>Enter</kbd> 可带着新种子再下一层。HP 归零则本局结束。
         青灰色小人是前任测绘员：火把照到才看得见。走近或按 <kbd>E</kbd> 交谈；问候时按 <kbd>Esc</kbd> 可先离开。
+        下楼后若账本服务开着，他仍记得你是否换过油、听过警告；没开则失忆，游戏不崩。
       </div>
-      <div>默认完全离线。想接真模型时切到 HTTP API。</div>
+      <div>默认完全离线。想接真模型时切到 HTTP API。想让灰岩跨层记得旗标时，另开可选的本地账本（见 README）。</div>
     </footer>
   </div>
 
@@ -120,6 +122,7 @@
   <script src="js/fov.js"></script>
   <script src="js/llm.js"></script>
   <script src="js/gm.js"></script>
+  <script src="js/memory.js"></script>
   <script src="js/npc.js"></script>
   <script src="js/events.js"></script>
   <script src="js/game.js"></script>

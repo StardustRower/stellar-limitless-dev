@@ -276,6 +276,8 @@ button.talk-opt {
   font-size: 11px;
   color: var(--muted);
 }
+#ledger-hint.is-on { color: var(--teal); }
+#ledger-hint.is-off { color: var(--muted); }
 
 #log {
   flex: 1;
