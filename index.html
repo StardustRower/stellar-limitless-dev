@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>星尘地牢 · Stellar Dungeon</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <div class="brand">
+        <h1>STELLAR <span>LIMITLESS</span></h1>
+        <p>无界学习场 · 第一站：可播种的 AI 地牢</p>
+      </div>
+      <div class="controls">
+        <label class="field">种子
+          <input id="seed" type="text" spellcheck="false" autocomplete="off" value="stardust-7">
+        </label>
+        <button id="regen" type="button">重生此地</button>
+        <button id="random-seed" type="button">换一颗种子</button>
+        <div class="mode-switch" role="group" aria-label="叙事引擎">
+          <button type="button" data-mode="local">本地规则</button>
+          <button type="button" data-mode="api">HTTP API</button>
+        </div>
+        <label class="field">语言
+          <select id="lang">
+            <option value="zh">中文</option>
+            <option value="en">English</option>
+            <option value="mix">中英对照</option>
+          </select>
+        </label>
+        <button id="toggle-api" type="button">API 设置</button>
+      </div>
+    </header>
+
+    <section id="api-panel" hidden>
+      <p class="hint">OpenAI 兼容接口：填 Base URL、密钥、模型名。只存在你的浏览器 localStorage，仓库里不会出现密钥。失败时自动回退本地规则引擎。</p>
+      <div class="api-grid">
+        <label>Base URL
+          <input id="api-url" type="url" placeholder="https://api.openai.com/v1">
+        </label>
+        <label>模型
+          <input id="api-model" type="text" placeholder="gpt-4o-mini">
+        </label>
+        <label style="grid-column: 1 / -1;">API Key
+          <input id="api-key" type="password" autocomplete="off" placeholder="sk-… 不会被提交到 git">
+        </label>
+      </div>
+      <div class="api-actions">
+        <button id="save-api" type="button">保存到本机</button>
+        <span id="api-saved"></span>
+      </div>
+    </section>
+
+    <main class="stage">
+      <section class="map-panel">
+        <div class="map-head">
+          <span>种子 <strong id="seed-echo">stardust-7</strong></span>
+          <span>房间 <strong id="room-count">0</strong> · 引擎 <strong id="engine-label">本地规则</strong></span>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="dungeon" tabindex="0" aria-label="地牢地图"></canvas>
+        </div>
+        <div class="legend">
+          <span><i class="swatch wall"></i>岩壁</span>
+          <span><i class="swatch floor"></i>房间 / 走廊</span>
+          <span><i class="swatch enter"></i>入口</span>
+          <span><i class="swatch exit"></i>下行阶梯</span>
+          <span><i class="swatch item"></i>拾获</span>
+          <span><i class="swatch event"></i>异兆</span>
+          <span>亮点是你</span>
+        </div>
+      </section>
+
+      <aside class="story-panel">
+        <div class="story-head">
+          <strong>地下手记</strong>
+          <span>走进房间或踩上异兆格，会生成一段叙事</span>
+        </div>
+        <div id="status">入口</div>
+        <div id="log" aria-live="polite"></div>
+      </aside>
+    </main>
+
+    <footer class="foot">
+      <div>
+        移动：<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 或方向键。
+        走到青色阶梯后按 <kbd>Enter</kbd> 可带着新种子再下一层。
+      </div>
+      <div>默认完全离线。想接真模型时切到 HTTP API。</div>
+    </footer>
+  </div>
+
+  <!-- 不用 ES module：file:// 直接打开就不会被浏览器的跨源规则拦住。 -->
+  <script src="js/rng.js"></script>
+  <script src="js/dungeon.js"></script>
+  <script src="js/llm.js"></script>
+  <script src="js/events.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
