@@ -2,8 +2,8 @@ extends Control
 ## 视觉小说壳：同一张 HuiyanTable，没有走路，没有地牢格子。
 ## 左侧剪影、右侧选项。能发生的事仍只来自表。
 ##
-## 下一课可以让按钮去问同一本 FastAPI 旗标账本（见仓库 server/ledger.py）。
-## 不是这一课：这一课只证明表能站进 Godot 的节点树，不接 HTTP、不接 LLM。
+## 这一课让 HTTPRequest 去问同一本 FastAPI 旗标账本（server/ledger.py）。
+## 表仍在 npc_table.gd；记忆在 memory.gd。不要在这里发明第二套跳转。
 
 const Table = preload("res://npc_table.gd")
 
@@ -18,6 +18,7 @@ const Table = preload("res://npc_table.gd")
 @onready var mechanic_label: Label = %MechanicLabel
 @onready var options_box: VBoxContainer = %Options
 @onready var drop_page_button: Button = %DropPageButton
+@onready var ledger_label: Label = %LedgerLabel
 @onready var figure_host: Control = %FigureHost
 @onready var silhouette: Node2D = %Silhouette
 @onready var head: Polygon2D = %Head
@@ -26,18 +27,22 @@ const Table = preload("res://npc_table.gd")
 @onready var oil_flask: Polygon2D = %OilFlask
 @onready var omen_mark: Polygon2D = %OmenMark
 @onready var omen_caption: Label = %OmenCaption
+@onready var memory: Node = %Memory
 
 var npc: Dictionary = {}
 var world: Dictionary = {}
 var seed_text: String = "stardust-7"
 var last_outcome: String = ""
 var _busy: bool = false
+var _run_id: int = 0
 
 
 func _ready() -> void:
 	_install_cjk_font()
 	_style_hp_bar()
 	figure_host.resized.connect(_place_figure)
+	memory.status_changed.connect(_on_ledger_status)
+	_on_ledger_status(memory.status)
 	start_scene(seed_edit.text)
 
 
@@ -47,6 +52,8 @@ func _process(_delta: float) -> void:
 
 
 func start_scene(seed_value: String) -> void:
+	_run_id += 1
+	var run := _run_id
 	seed_text = seed_value.strip_edges()
 	if seed_text == "":
 		seed_text = "stardust-7"
@@ -59,7 +66,21 @@ func start_scene(seed_value: String) -> void:
 	}
 	npc = Table.make_npc()
 	last_outcome = ""
-	_enter_state("greet", Table.find_option("idle", "open"))
+	memory.reset_status()
+	_on_ledger_status(memory.status)
+	_busy = true
+	talk_line.text = "……"
+	_sync_hud()
+	_render_options()
+	# 开口之前先 GET：地牢里换过油，这一幕问候要走 return_traded，不能再出现交易。
+	await memory.hydrate(npc, seed_text)
+	if run != _run_id:
+		return
+	world.warned = bool(world.warned or npc.get("warned", false))
+	await _enter_state("greet", Table.find_option("idle", "open"))
+	if run != _run_id:
+		return
+	_busy = false
 
 
 func _enter_state(next_id: String, via_option) -> void:
@@ -99,6 +120,14 @@ func _enter_state(next_id: String, via_option) -> void:
 	npc.last_state = npc.state
 	_sync_hud()
 	_render_options()
+	# 开口 / 交易 / 警告 / 告别：GET 再 POST。打听只 POST last_state，不另写一套故事。
+	var state_now := str(npc.state)
+	if state_now == "greet" or state_now == "trade" or state_now == "warn" or state_now == "farewell" or state_now == "done":
+		await memory.sync_flags(npc, seed_text)
+	else:
+		await memory.save_flags(seed_text, npc)
+	_sync_hud()
+	_render_options()
 
 
 func _pick(option_id: String) -> void:
@@ -113,7 +142,7 @@ func _pick(option_id: String) -> void:
 		_render_options()
 		return
 	_busy = true
-	_enter_state(str(opt.get("next", "")), opt)
+	await _enter_state(str(opt.get("next", "")), opt)
 	_busy = false
 
 
@@ -158,7 +187,7 @@ func _sync_hud() -> void:
 	bits.append("上次 %s" % str(npc.get("last_state", "idle")))
 	flags_label.text = "旗标 " + " · ".join(bits)
 	if last_outcome == "":
-		mechanic_label.text = "数字只来自表，不来自句子。引擎：本地台词（这一课不接 LLM）。"
+		mechanic_label.text = "数字只来自表，不来自句子。引擎：本地台词。账本只记四个旗标，没有聊天记录。"
 	else:
 		mechanic_label.text = last_outcome
 	var has_page := Table.has_survey(world.inventory)
@@ -192,6 +221,21 @@ func _on_replay_pressed() -> void:
 
 func _on_seed_submitted(new_text: String) -> void:
 	start_scene(new_text)
+
+
+func _on_ledger_status(next: String) -> void:
+	if next == "online":
+		ledger_label.text = "账本 · 记得"
+		ledger_label.add_theme_color_override("font_color", Color("7ec8c4"))
+		ledger_label.tooltip_text = "本地旗标账本在线。灰岩只记得 met / traded / warned / last_state，没有聊天记录。"
+	elif next == "amnesia":
+		ledger_label.text = "账本 · 本局失忆"
+		ledger_label.add_theme_color_override("font_color", Color("6a5c4c"))
+		ledger_label.tooltip_text = "账本没开，或请求失败。游戏照常玩；他会当第一次见你。"
+	else:
+		ledger_label.text = "账本 · …"
+		ledger_label.add_theme_color_override("font_color", Color("9a8b74"))
+		ledger_label.tooltip_text = "正在探测本地账本（127.0.0.1:8765）。"
 
 
 func _place_figure() -> void:

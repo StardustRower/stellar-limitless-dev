@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="灰岩 · 第一间房"
-config/description="Demo 6: Godot 4 hello room + the same Huiyan FSM table. Local lines only — no HTTP, no LLM, no ledger in this lesson."
+config/description="Demo 7: Godot 4 room + the same Huiyan FSM table, talking to the FastAPI flag ledger. Local lines; flags only — no transcripts."
 run/main_scene="res://huiyan_room.tscn"
 config/features=PackedStringArray("4.2", "GL Compatibility")
 

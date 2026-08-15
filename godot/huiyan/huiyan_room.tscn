@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://huiyan_room.gd" id="1_room"]
+[ext_resource type="Script" path="res://memory.gd" id="2_mem"]
 
 [node name="HuiyanRoom" type="Control"]
 layout_mode = 3
@@ -10,6 +11,14 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_room")
+
+[node name="Memory" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("2_mem")
+
+[node name="HTTPRequest" type="HTTPRequest" parent="Memory"]
+timeout = 0.8
+use_threads = true
 
 [node name="Background" type="ColorRect" parent="."]
 layout_mode = 1
@@ -166,17 +175,30 @@ size_flags_horizontal = 3
 size_flags_stretch_ratio = 1.12
 theme_override_constants/separation = 8
 
-[node name="TitleLabel" type="Label" parent="Margin/Layout/Talk"]
+[node name="TitleRow" type="HBoxContainer" parent="Margin/Layout/Talk"]
 layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="Margin/Layout/Talk/TitleRow"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.917647, 0.862745, 0.776471, 1)
 theme_override_font_sizes/font_size = 22
-text = "Demo 6 · Godot 第一间房 · 同一张灰岩表"
+text = "Demo 7 · Godot 问同一本旗标账本"
+
+[node name="LedgerLabel" type="Label" parent="Margin/Layout/Talk/TitleRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.603922, 0.545098, 0.454902, 1)
+theme_override_font_sizes/font_size = 14
+text = "账本 · …"
+horizontal_alignment = 2
 
 [node name="SubtitleLabel" type="Label" parent="Margin/Layout/Talk"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.721569, 0.643137, 0.521569, 1)
 autowrap_mode = 3
-text = "没有走路，没有地牢。选项来自 npc_table.gd，和 HTML 的 js/npc-table.js 是同一张图。本地台词，不接 HTTP / LLM / 账本。"
+text = "同一间房、同一张表。HTTPRequest 只问四个旗标。账本没开也能玩，他会失忆。"
 
 [node name="SeedRow" type="HBoxContainer" parent="Margin/Layout/Talk"]
 layout_mode = 2
@@ -267,7 +289,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.541176, 0.478431, 0.380392, 1)
 autowrap_mode = 3
-text = "数字只来自表，不来自句子。引擎：本地台词（这一课不接 LLM）。"
+text = "数字只来自表，不来自句子。引擎：本地台词。账本只记四个旗标，没有聊天记录。"
 
 [node name="Options" type="VBoxContainer" parent="Margin/Layout/Talk"]
 unique_name_in_owner = true
@@ -287,7 +309,7 @@ tooltip_text = "放下后，交易按钮会变灰——那是表在拒绝。"
 layout_mode = 2
 theme_override_colors/font_color = Color(0.541176, 0.478431, 0.380392, 1)
 autowrap_mode = 3
-text = "问候之后只能打听 / 交易 / 警告，不能跳到告别。交易需要测线残页；回血写在表上（3 点）。开局 HP 7，换油后应看到 7→10。按 F5 运行这一幕。"
+text = "问候之后只能打听 / 交易 / 警告，不能跳到告别。交易需要测线残页；回血写在表上（3 点）。开局 HP 7，换油后应看到 7→10。先开账本再按 F5：地牢里换过油，这一幕不再换。没开则失忆，房间照常可玩。"
 
 [connection signal="text_submitted" from="Margin/Layout/Talk/SeedRow/SeedEdit" to="." method="_on_seed_submitted"]
 [connection signal="pressed" from="Margin/Layout/Talk/SeedRow/ReplayButton" to="." method="_on_replay_pressed"]
