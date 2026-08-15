@@ -140,8 +140,9 @@ button.is-on {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #090807;
+  background: #000000;
   min-height: 420px;
+  position: relative;
 }
 canvas#dungeon {
   image-rendering: pixelated;
@@ -171,6 +172,52 @@ canvas#dungeon {
 .swatch.exit { background: #7ec8c4; }
 .swatch.item { background: #e2b84a; }
 .swatch.event { background: #ba84e8; }
+.swatch.unseen { background: #000; border: 1px solid #3a3126; }
+.swatch.memory { background: #2a2e38; }
+
+.vitals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+}
+.hp-bar {
+  width: 72px;
+  height: 8px;
+  background: #2a1c14;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+}
+.hp-bar i {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(#c9a45c, #8a6d32);
+}
+.hp-bar i.is-ok { background: linear-gradient(#c9a45c, #8a6d32); }
+.hp-bar i.is-low { background: linear-gradient(#c47a62, #6a2018); }
+
+.run-banner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(20, 10, 8, 0.92);
+  border: 1px solid var(--danger);
+  color: #f0d0c4;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  pointer-events: none;
+  max-width: 80%;
+  text-align: center;
+}
+.run-banner[hidden] { display: none !important; }
+.run-banner.is-dead { box-shadow: 0 0 24px rgba(196, 122, 98, 0.25); }
 
 .story-panel { min-height: 0; }
 #status {

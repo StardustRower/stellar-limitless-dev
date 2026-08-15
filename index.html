@@ -11,7 +11,7 @@
     <header class="top">
       <div class="brand">
         <h1>STELLAR <span>LIMITLESS</span></h1>
-        <p>无界学习场 · 第一站：可播种的 AI 地牢</p>
+        <p>无界学习场 · 第二站：火把视野与地下城主持人</p>
       </div>
       <div class="controls">
         <label class="field">种子
@@ -19,6 +19,7 @@
         </label>
         <button id="regen" type="button">重生此地</button>
         <button id="random-seed" type="button">换一颗种子</button>
+        <button id="toggle-fov" type="button" class="is-on" title="默认：只看见火把半径。点此显示全图（学习/调试）。">火把视野</button>
         <div class="mode-switch" role="group" aria-label="叙事引擎">
           <button type="button" data-mode="local">本地规则</button>
           <button type="button" data-mode="api">HTTP API</button>
@@ -57,10 +58,16 @@
       <section class="map-panel">
         <div class="map-head">
           <span>种子 <strong id="seed-echo">stardust-7</strong></span>
-          <span>房间 <strong id="room-count">0</strong> · 引擎 <strong id="engine-label">本地规则</strong></span>
+          <span class="vitals">
+            <span>HP <strong id="hp-num">10</strong>/10</span>
+            <span class="hp-bar" aria-hidden="true"><i id="hp-fill"></i></span>
+            <span>已探 <strong id="visited-count">0</strong> 房</span>
+            <span>房间 <strong id="room-count">0</strong> · 引擎 <strong id="engine-label">本地规则</strong></span>
+          </span>
         </div>
         <div class="canvas-wrap">
           <canvas id="dungeon" tabindex="0" aria-label="地牢地图"></canvas>
+          <div id="run-banner" class="run-banner" hidden></div>
         </div>
         <div class="legend">
           <span><i class="swatch wall"></i>岩壁</span>
@@ -69,14 +76,16 @@
           <span><i class="swatch exit"></i>下行阶梯</span>
           <span><i class="swatch item"></i>拾获</span>
           <span><i class="swatch event"></i>异兆</span>
-          <span>亮点是你</span>
+          <span><i class="swatch unseen"></i>未探索</span>
+          <span><i class="swatch memory"></i>记忆</span>
+          <span>亮点是你 · 火把半径内才清晰</span>
         </div>
       </section>
 
       <aside class="story-panel">
         <div class="story-head">
           <strong>地下手记</strong>
-          <span>走进房间或踩上异兆格，会生成一段叙事</span>
+          <span>走进房间或踩上异兆格。异兆会治疗、受伤或换物——数字由主持人表决定，旁白不编造 HP。</span>
         </div>
         <div id="status">入口</div>
         <div id="log" aria-live="polite"></div>
@@ -86,7 +95,8 @@
     <footer class="foot">
       <div>
         移动：<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 或方向键。
-        走到青色阶梯后按 <kbd>Enter</kbd> 可带着新种子再下一层。
+        火把只照附近；按 <kbd>F</kbd> 可切到全图（学习用，不会把没走过的地方记成已探索）。
+        走到青色阶梯后按 <kbd>Enter</kbd> 可带着新种子再下一层。HP 归零则本局结束。
       </div>
       <div>默认完全离线。想接真模型时切到 HTTP API。</div>
     </footer>
@@ -95,7 +105,9 @@
   <!-- 不用 ES module：file:// 直接打开就不会被浏览器的跨源规则拦住。 -->
   <script src="js/rng.js"></script>
   <script src="js/dungeon.js"></script>
+  <script src="js/fov.js"></script>
   <script src="js/llm.js"></script>
+  <script src="js/gm.js"></script>
   <script src="js/events.js"></script>
   <script src="js/game.js"></script>
 </body>

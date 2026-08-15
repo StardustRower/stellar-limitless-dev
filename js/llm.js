@@ -69,7 +69,8 @@ var LLM = (function () {
   }
 
   function cacheKey(ctx) {
-    return [ctx.seed, ctx.lang, ctx.trigger, ctx.roomId, ctx.kind, ctx.x, ctx.y].join("|");
+    var gm = ctx.gmEvent && ctx.gmEvent.id ? ctx.gmEvent.id : "";
+    return [ctx.seed, ctx.lang, ctx.trigger, ctx.roomId, ctx.kind, ctx.x, ctx.y, gm].join("|");
   }
 
   function localDescribe(ctx, rng) {
@@ -107,6 +108,16 @@ var LLM = (function () {
       var b = localDescribe(Object.assign({}, ctx, { lang: "en" }), rng);
       return a + "\n" + b;
     }
+    if (ctx.trigger === "gm_event" && ctx.gmEvent) {
+      var bank = lang === "en" ? ctx.gmEvent.narrateEn : ctx.gmEvent.narrateZh;
+      if (bank && bank.length) return rng.pick(bank);
+    }
+    if (ctx.trigger === "game_over") {
+      return lang === "en"
+        ? "The flame pinches out. The last thing you map is the tile underfoot. Seed stays; the body does not. Regen, or take another seed."
+        : "灯焰收成一点，随即灭了。你最后测到的，是脚下这一格。种子还在，人先停在这里。点重生，或换一颗种子。";
+    }
+
     var pack = lang === "en" ? enRoom : zhRoom;
     return pack[ctx.trigger] || pack.fallback;
   }
@@ -122,6 +133,10 @@ var LLM = (function () {
       mix: "先写 2 句简体中文，再写 2 句英文。两者描述同一瞬间，不要互译腔。"
     };
     var sys = "You narrate a roguelike dungeon. " + (langLine[ctx.lang] || langLine.zh);
+    sys += " Never invent HP, damage numbers, gold, or item stats. Numbers belong to the game engine.";
+    if (ctx.gmEvent) {
+      sys += " A constrained GM already chose the event. Narrate that event only; do not pick a different one; do not mention numbers.";
+    }
     var user = [
       "seed=" + ctx.seed,
       "trigger=" + ctx.trigger,
@@ -130,10 +145,15 @@ var LLM = (function () {
       "size=" + ctx.w + "x" + ctx.h,
       "xy=" + ctx.x + "," + ctx.y,
       ctx.inventory && ctx.inventory.length ? "carrying=" + ctx.inventory.join(", ") : "carrying=nothing"
-    ].join("\n");
+    ];
+    if (ctx.gmEvent) {
+      user.push("chosen_event=" + ctx.gmEvent.id);
+      user.push("event_name=" + ctx.gmEvent.nameZh + " / " + ctx.gmEvent.nameEn);
+      user.push("mechanical_intent=" + (ctx.gmIntent || "unknown") + " (imply it in prose; never quantify)");
+    }
     return [
       { role: "system", content: sys },
-      { role: "user", content: user }
+      { role: "user", content: user.join("\n") }
     ];
   }
 
@@ -141,7 +161,11 @@ var LLM = (function () {
     return RNG.fromSeed(ctx.seed + "|" + ctx.trigger + "|" + ctx.roomId + "|" + ctx.x + "," + ctx.y);
   }
 
-  async function callApi(ctx, settings) {
+  /**
+   * 共用的 /chat/completions 调用。GM 选选项时走 complete；叙事仍走 describe。
+   */
+  async function complete(messages, settings, opts) {
+    opts = opts || {};
     var base = String(settings.baseUrl || "").replace(/\/+$/, "");
     if (!base) throw new Error("缺少 API 地址");
     if (!settings.apiKey) throw new Error("缺少 API 密钥");
@@ -157,9 +181,9 @@ var LLM = (function () {
       },
       body: JSON.stringify({
         model: settings.model || "gpt-4o-mini",
-        temperature: 0.7,
-        max_tokens: 220,
-        messages: buildMessages(ctx)
+        temperature: opts.temperature != null ? opts.temperature : 0.7,
+        max_tokens: opts.maxTokens || 220,
+        messages: messages
       }),
       signal: ctrl ? ctrl.signal : undefined
     });
@@ -173,6 +197,10 @@ var LLM = (function () {
     var text = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
     if (!text || !String(text).trim()) throw new Error("API 返回空文本");
     return String(text).trim();
+  }
+
+  async function callApi(ctx, settings) {
+    return complete(buildMessages(ctx), settings, { temperature: 0.7, maxTokens: 220 });
   }
 
   async function describe(ctx) {
@@ -224,6 +252,7 @@ var LLM = (function () {
     loadSettings: loadSettings,
     saveSettings: saveSettings,
     describe: describe,
+    complete: complete,
     prefetch: prefetch,
     clearCache: clearCache,
     buildMessages: buildMessages
