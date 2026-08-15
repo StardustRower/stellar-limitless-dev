@@ -6,7 +6,7 @@
 - 改完立刻看见结果
 - 技术是真的（程序化生成、可替换的语言模型、受约束的主持人、有限状态的对话、受约束的记忆、同一张表换皮肤），不是 PPT 名词
 
-当前可玩两条入口：**地牢**（Demo 1–4 叠在 `index.html`）和 **视觉小说一幕**（Demo 5，`vn.html`）。学习路径一句话：种子长地牢 → 火把与主持人 → 对话是表 → 记忆是旗标 → **同一张表站进一幕 VN**。
+当前可玩三条入口：**地牢**（Demo 1–4 叠在 `index.html`）、**视觉小说一幕**（Demo 5，`vn.html`）、**Godot 第一间房**（Demo 6，`godot/huiyan/`）。学习路径一句话：种子长地牢 → 火把与主持人 → 对话是表 → 记忆是旗标 → 同一张表站进一幕 VN → **同一张表站进 Godot 的节点树**。
 
 ## 30 秒怎么玩
 
@@ -33,7 +33,21 @@
 6. 默认仍是本地规则引擎，离线、瞬时。HTTP API 可选，失败回退本地。
 7. 测线默认 `stardust-7`，和地牢是同一个人。账本开着时，那边换过油，这边也不会再换；没开则失忆，这一幕照常可玩。
 
-地牢演示没有被这一幕替换。两条入口共用 `js/npc-table.js`。改表上的 `next` 或治疗点数，两边一起变。
+地牢演示没有被这一幕替换。两条 HTML 入口共用 `js/npc-table.js`。改表上的 `next` 或治疗点数，两边一起变。Godot 课把同一张表抄进 Dictionary，见下面 Demo 6。
+
+## Godot 第一间房（Demo 6）
+
+同一张 NPC 表，第一次出现在游戏引擎里。没有走路，没有地牢，不接 FastAPI，不接 LLM。证明「表」能离开浏览器，站进节点树。
+
+1. 安装 **Godot 4.x 标准版**（还没有的话，见 [notes/08-godot-first-scene.md](notes/08-godot-first-scene.md) 逐步说明）。
+2. 项目管理器里 **Import**，选中 `godot/huiyan/project.godot`，打开后按 <kbd>F5</kbd>。
+3. 左侧是测绘员灰岩的 Polygon2D 剪影（没有图片资源）。右侧是对话框和选项按钮。
+4. 问候之后只能打听 / 交易 / 警告，**不能跳到告别**——那一跳不在表里。
+5. 开局 HP 是 7，背包里有半页测线记录。换油后 HP 应变为 10（表上写着治疗 3 点）。警告会立旗标，立绘旁出现一处异兆；这一幕没有格子可标。
+6. 点「放下残页」：交易按钮变灰。那是表在拒绝，不是角色在即兴。
+7. 台词写在 `npc_table.gd` 里，离线、瞬时。**不要**在这一课去问 `localhost:8765` 或任何 HTTP API。注释里写了：下一课可以接同一本账本。
+
+HTML 演示没有被这一课替换。`index.html` 和 `vn.html` 仍然双击就能玩。Godot 是第三条入口：表的第三层皮肤。
 
 ## 怎么运行
 
@@ -64,6 +78,17 @@ python3 -m http.server 8000
 
 这只提供网页。灰岩跨层仍会失忆，除非你再开下面的账本。
 
+**方式 C（Demo 6，Godot 4 编辑器）**
+
+浏览器打不开 `.tscn`。需要先装 Godot 4（标准版，不是 3，第一天也不用 .NET 版）：
+
+1. [https://godotengine.org/download](https://godotengine.org/download) 下载对应系统的 4.x。
+2. Windows 解压后双击 exe；macOS 拖进应用程序。
+3. 项目管理器点 Import，选 `godot/huiyan/project.godot`。
+4. 打开后按 F5。左侧剪影、右侧选项，开局 HP 7/10。
+
+详细步骤（含汉字方框怎么办）见 [notes/08-godot-first-scene.md](notes/08-godot-first-scene.md)。这一课**不需要** Python 账本，也不需要导出模板。
+
 ## Demo 4 · 可选账本（FastAPI）
 
 HTML **不依赖**这个服务。Demo 1–5 的功能（地牢、视野、HP、主持人、对话状态机、视觉小说一幕）在服务关掉时全部照常。账本只做一件事：记住四个旗标（见过面 / 交易过 / 警告过 / 上次停在哪一态）。没有数据库，没有密钥，关掉终端记忆就没了。地牢和 `vn.html` 默认同一条测线 `stardust-7`：一边换过油，另一边也记得。
@@ -87,7 +112,7 @@ Windows 若 `pip` 被拒绝，不必强行折腾——失忆模式就是为这�
 
 ## 探索循环（学什么 → 改什么 → 再开一局）
 
-1. **先当玩家**：摸黑走完一层，踩几格异兆，找到测绘员把三个选项都试一遍（没有残页时交易按钮是灰的——这是表在拒绝，不是模型在即兴）。开着账本再下一层，看他还记不记得。再关掉账本刷新，看他会不会失忆。
+1. **先当玩家**：摸黑走完一层，踩几格异兆，找到测绘员把三个选项都试一遍（没有残页时交易按钮是灰的——这是表在拒绝，不是模型在即兴）。开着账本再下一层，看他还记不记得。再关掉账本刷新，看他会不会失忆。有 Godot 4 时打开 `godot/huiyan/`，按 F5：同一张表，没有走路。
 2. **读笔记**（给零基础、但讲对技术）：
    - [notes/01-pcg-dungeon.md](notes/01-pcg-dungeon.md) — 地牢为什么能「长」出来，种子为什么比 `Math.random()` 重要。
    - [notes/02-llm-adapter.md](notes/02-llm-adapter.md) — 游戏如何同时支持「假 AI」和「真 LLM」，密钥为什么不能进仓库。
@@ -95,8 +120,9 @@ Windows 若 `pip` 被拒绝，不必强行折腾——失忆模式就是为这�
    - [notes/04-gm-state.md](notes/04-gm-state.md) — 主持人如何按状态挑事件；为什么模型不准发明伤害数字。
    - [notes/05-dialogue-fsm.md](notes/05-dialogue-fsm.md) — 对话为什么是状态机；为什么状态是一张表，不是自由聊天。
    - [notes/06-constrained-memory.md](notes/06-constrained-memory.md) — 记忆为什么是旗标不是作文；客户端 vs 服务器；账本挂了会怎样。
-   - [notes/07-visual-novel-fsm.md](notes/07-visual-novel-fsm.md) — 视觉小说为什么也是状态机；为什么这一幕 HTML 是通往 Godot / Ren'Py 的桥（搬表，不重写故事）。
-3. **拧一个旋钮**：打开 `js/fov.js`，只改 `RADIUS`。保存，回到浏览器刷新，用**同一颗种子**重生，对比能看多远。或打开 `js/npc-table.js`，改交易的治疗点数 / 某一跳的 `next`，分别打开地牢和 `vn.html`，对照两边会不会一起变。或打开 `js/memory.js` 看 `lineKey` 如何把 `-down` 剥掉。
+   - [notes/07-visual-novel-fsm.md](notes/07-visual-novel-fsm.md) — 视觉小说为什么也是状态机；为什么这一幕 HTML 是通往 Godot 的桥（搬表，不重写故事）。
+   - [notes/08-godot-first-scene.md](notes/08-godot-first-scene.md) — 场景/节点是什么；为什么抄表而不是重写；怎么安装 Godot 4 并 F5。
+3. **拧一个旋钮**：打开 `js/fov.js`，只改 `RADIUS`。保存，回到浏览器刷新，用**同一颗种子**重生，对比能看多远。或打开 `js/npc-table.js`，改交易的治疗点数 / 某一跳的 `next`，分别打开地牢和 `vn.html`，对照两边会不会一起变。打开 `godot/huiyan/npc_table.gd` 看同一张图：id、边、heal 3 应对得上。或打开 `js/memory.js` 看 `lineKey` 如何把 `-down` 剥掉。
 4. **（可选）接真模型**：切到 HTTP API，填 Base URL / 模型 / 密钥，保存。再进一间房、踩一格异兆、或与灰岩说话。模型可以写口气，但不能改 HP、不能跳状态、不能发明一段没有旗标的回忆。失败时手记会标「本地回退」，游戏继续可玩。
 
 ## 文件地图
@@ -112,24 +138,30 @@ Windows 若 `pip` 被拒绝，不必强行折腾——失忆模式就是为这�
 | `js/llm.js` | 叙事适配器：本地规则 / OpenAI 兼容 API。对话时只准写当前状态的台词；记忆只准看到旗标。 |
 | `js/gm.js` | 本地地下城主持人：按状态从约束表挑异兆。 |
 | `js/memory.js` | 问本地账本要四个旗标。失败 → 失忆，游戏继续。 |
-| `js/npc-table.js` | **唯一**的对话状态表 + 本地台词 + 表驱动后果。地牢和 VN 都读这一份。 |
+| `js/npc-table.js` | HTML 侧**唯一**的对话状态表 + 本地台词 + 表驱动后果。地牢和 VN 都读这一份。 |
 | `js/npc.js` | 地牢壳：落点、走近、在地图上标异兆。 |
 | `js/vn.js` | 视觉小说壳：立绘、对话框、选项。 |
 | `js/events.js` | 走进房间、拾获、异兆 → 先裁决再请求文本。 |
 | `js/game.js` | 键盘、画布、按钮、迷雾绘制、NPC 小人。 |
-| `server/ledger.py` | 极小 FastAPI：GET/POST 旗标表。无数据库、无密钥。 |
+| `server/ledger.py` | 极小 FastAPI：GET/POST 旗标表。无数据库、无密钥。Demo 6 还不调用它。 |
 | `server/requirements.txt` | 只列出 fastapi 与 uvicorn。 |
+| `godot/.gitignore` | 忽略编辑器缓存 `.godot/`。 |
+| `godot/huiyan/project.godot` | Demo 6：Godot 4 项目入口。F5 运行主场景。 |
+| `godot/huiyan/huiyan_room.tscn` | 一间房：剪影节点 + 对话框 + 选项。 |
+| `godot/huiyan/huiyan_room.gd` | 房间壳：按钮、HP、本地台词。不接 HTTP。 |
+| `godot/huiyan/npc_table.gd` | 从 `js/npc-table.js` 抄来的 Dictionary：同一套 id / 边 / 治疗 3。 |
 | `notes/` | 给探索者的概念笔记。 |
 | `LICENSE` | MIT。 |
 
-## 五站分别证明了什么
+## 六站分别证明了什么
 
 1. **Demo 1**：种子 + BSP 房间 + 可替换叙事。同一种子，同一张图。
 2. **Demo 2**：信息隐藏（FOV）+ 状态反馈（HP）+ 受约束的主持人。AI 从文案机变成「先挑事件、再写句子」。
 3. **Demo 3**：同一约束用在对话上。NPC 是一张表，不是聊天窗口；模型只写 2～3 句，不能跳状态、不能发明 HP。
 4. **Demo 4**：记忆是第二张约束表。旗标活在可选的本地账本里；模型仍然没有聊天记录。账本挂了就失忆，和 LLM 本地回退同一模式。
-5. **Demo 5**：同一张表换皮肤。视觉小说也是状态机；先在 HTML 里证明，再搬到 Godot / Ren'Py，搬的是表，不是故事。
+5. **Demo 5**：同一张表换皮肤。视觉小说也是状态机；先在 HTML 里证明，再搬到引擎，搬的是表，不是故事。
+6. **Demo 6**：表站进 Godot 4 的节点树。第一间房只有剪影和按钮；台词本地写死。引擎是皮肤，表仍是物理。
 
 ## 以后可能去的方向
 
-下一站候选（还没做）：**Godot 4 的第一间房 + 同一张灰岩表**。这一幕 HTML 已经证明表能离开地牢。下一课才值得打开编辑器：项目保持极小，把 `TABLE` 搬进 Dictionary，立绘换成引擎里的节点。不要先做程序化物品贴图——那是另一根轴，会离开「约束表」这条课。
+下一站候选（还没做）：**让 Godot 的按钮去问同一本 FastAPI 旗标账本**。这一课已经证明表能进编辑器。下一课才值得接端口：客户端（Godot 节点）vs 引擎（状态表）vs 服务器（四个旗标）三件套第一次同时可见。不要先做对话气泡美化，也不要先回到 HTML 做 PCG 肖像——那会离开「约束住在哪一层」这条课。
