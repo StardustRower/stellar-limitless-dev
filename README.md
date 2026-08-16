@@ -6,7 +6,7 @@
 - 改完立刻看见结果
 - 技术是真的（程序化生成、可替换的语言模型、受约束的主持人、有限状态的对话、受约束的记忆、同一张表换皮肤），不是 PPT 名词
 
-当前可玩三条入口：**地牢**（Demo 1–4 叠在 `index.html`）、**视觉小说一幕**（Demo 5，`vn.html`）、**Godot 第一间房**（Demo 6–7，`godot/huiyan/`）。学习路径一句话：种子长地牢 → 火把与主持人 → 对话是表 → 记忆是旗标 → 同一张表站进一幕 VN → 同一张表站进 Godot 的节点树 → **Godot 去问同一本四个旗标**。
+当前可玩三条入口：**地牢**（Demo 1–4 叠在 `index.html`）、**视觉小说一幕**（Demo 5，`vn.html`）、**Godot 第一间房**（Demo 6–7，`godot/huiyan/`）。另有 **CONTRACT #1** 的第四条入口：夜班一面墙（Demo 8，`godot/wall-npc/`），不改灰岩。学习路径一句话：种子长地牢 → 火把与主持人 → 对话是表 → 记忆是旗标 → 同一张表站进一幕 VN → 同一张表站进 Godot 的节点树 → **Godot 去问同一本四个旗标**。
 
 ## 30 秒怎么玩
 
@@ -62,6 +62,13 @@ HTML 演示没有被这一课替换。`index.html` 和 `vn.html` 仍然双击就
 
 没有 Python 也能 F5：那就是失忆模式。HTML 仍然双击就能玩，不依赖这一课。详细分工见 [notes/09-godot-ledger.md](notes/09-godot-ledger.md)。
 
+## CONTRACT #1 · 墙与夜班（Demo 8）
+
+新项目，不改 `godot/huiyan/`。夜班、一面墙、三个动词（修 / 听 / 说）。耐性、被看见、墙进度、结局只来自 `godot/wall-npc/wall_table.gd`。LLM 默认关闭，不准写表。墙进度到不了 100。
+
+1. Godot 4 项目管理器 **Import** `godot/wall-npc/project.godot`，按 <kbd>F5</kbd>。
+2. 三个结局的精确点法见 [notes/11-wall-npc.md](notes/11-wall-npc.md)：修×8；说×4 再抢装备；听×3、说×3 再登记罢工。
+
 ## 怎么运行
 
 不需要 Node、不需要 `npm install`、没有打包器。前端仍然是双击就能玩。
@@ -97,8 +104,8 @@ python3 -m http.server 8000
 
 1. [https://godotengine.org/download](https://godotengine.org/download) 下载对应系统的 4.x。
 2. Windows 解压后双击 exe；macOS 拖进应用程序。
-3. 项目管理器点 Import，选 `godot/huiyan/project.godot`。
-4. 打开后按 F5。左侧剪影、右侧选项，开局 HP 7/10。
+3. 项目管理器点 Import，选 `godot/huiyan/project.godot`（灰岩）或 `godot/wall-npc/project.godot`（CONTRACT #1 夜班墙）。
+4. 打开后按 F5。灰岩：左侧剪影、右侧选项，开局 HP 7/10。夜班墙：一面墙，三个按钮修 / 听 / 说。
 
 详细步骤（含汉字方框怎么办）见 [notes/08-godot-first-scene.md](notes/08-godot-first-scene.md)。Demo 6 不需要 Python。Demo 7 要让他跨客户端记得旗标时，先开下面的账本，再 F5。不需要导出模板。
 
@@ -145,6 +152,7 @@ Windows 若 `pip` 被拒绝，不必强行折腾——失忆模式就是为这�
    - [notes/07-visual-novel-fsm.md](notes/07-visual-novel-fsm.md) — 视觉小说为什么也是状态机；为什么这一幕 HTML 是通往 Godot 的桥（搬表，不重写故事）。
    - [notes/08-godot-first-scene.md](notes/08-godot-first-scene.md) — 场景/节点是什么；为什么抄表而不是重写；怎么安装 Godot 4 并 F5。
    - [notes/09-godot-ledger.md](notes/09-godot-ledger.md) — 客户端（节点）vs 引擎（表）vs 服务器（四个旗标）；为什么这是和 HTML 同一本保险；怎么先开 uvicorn 再 F5。
+   - [notes/11-wall-npc.md](notes/11-wall-npc.md) — CONTRACT #1：三个动词、墙为什么到不了 100、三个结局怎么点。
 3. **拧一个旋钮**：打开 `js/fov.js`，只改 `RADIUS`。保存，回到浏览器刷新，用**同一颗种子**重生，对比能看多远。或打开 `js/npc-table.js`，改交易的治疗点数 / 某一跳的 `next`，分别打开地牢和 `vn.html`，对照两边会不会一起变。打开 `godot/huiyan/npc_table.gd` 看同一张图：id、边、heal 3 应对得上。或打开 `godot/huiyan/memory.gd` 看 `line_key` 如何把 `-down` 剥掉——应和 `js/memory.js` 同一规则。
 4. **（可选）接真模型**：切到 HTTP API，填 Base URL / 模型 / 密钥，保存。再进一间房、踩一格异兆、或与灰岩说话。模型可以写口气，但不能改 HP、不能跳状态、不能发明一段没有旗标的回忆。失败时手记会标「本地回退」，游戏继续可玩。
 
@@ -174,7 +182,10 @@ Windows 若 `pip` 被拒绝，不必强行折腾——失忆模式就是为这�
 | `godot/huiyan/huiyan_room.gd` | 房间壳：按钮、HP、本地台词。开口时问账本。 |
 | `godot/huiyan/memory.gd` | Godot 侧旗标客户端。对应 `js/memory.js`。失败 → 失忆。 |
 | `godot/huiyan/npc_table.gd` | 从 `js/npc-table.js` 抄来的 Dictionary：同一套 id / 边 / 治疗 3。 |
+| `godot/wall-npc/project.godot` | CONTRACT #1。F5 运行夜班墙。不改灰岩。 |
+| `godot/wall-npc/wall_table.gd` | 夜班过渡表：三动词加减、97 封顶、三个结局。 |
 | `notes/09-godot-ledger.md` | 客户端 vs 引擎 vs 服务器；先开 uvicorn 再 F5。 |
+| `notes/11-wall-npc.md` | 怎么 F5、三个动词、三个结局的点法。 |
 | `notes/` | 给探索者的概念笔记。 |
 | `LICENSE` | MIT。 |
 
