@@ -1,0 +1,28 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="墙 · 夜班"
+config/description="CONTRACT #1: one wall, three verbs, three endings. Numbers and endings come only from wall_table.gd. LLM adapter exists but is off and cannot write meters."
+run/main_scene="res://wall_room.tscn"
+config/features=PackedStringArray("4.2", "GL Compatibility")
+
+[display]
+
+window/size/viewport_width=1100
+window/size/viewport_height=700
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

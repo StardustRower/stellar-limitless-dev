@@ -1,0 +1,347 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://wall_room.gd" id="1_room"]
+
+[node name="WallRoom" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_room")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.0392157, 0.0352941, 0.0313726, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 16
+
+[node name="Layout" type="HBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Stage" type="Control" parent="Margin/Layout"]
+layout_mode = 2
+custom_minimum_size = Vector2(420, 0)
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.95
+
+[node name="RoomBack" type="ColorRect" parent="Margin/Layout/Stage"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.101961, 0.0941176, 0.0784314, 1)
+
+[node name="Floor" type="ColorRect" parent="Margin/Layout/Stage"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -88.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+color = Color(0.0627451, 0.054902, 0.0470588, 1)
+
+[node name="Lamp" type="ColorRect" parent="Margin/Layout/Stage"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 24.0
+offset_top = 16.0
+offset_right = -24.0
+offset_bottom = 28.0
+grow_horizontal = 2
+mouse_filter = 2
+color = Color(0.721569, 0.690196, 0.478431, 1)
+
+[node name="WallFace" type="ColorRect" parent="Margin/Layout/Stage"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 72.0
+offset_top = 56.0
+offset_right = -96.0
+offset_bottom = -96.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.321569, 0.301961, 0.266667, 1)
+
+[node name="WallFill" type="ColorRect" parent="Margin/Layout/Stage/WallFace"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 280.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.415686, 0.392157, 0.333333, 1)
+
+[node name="CrackA" type="Polygon2D" parent="Margin/Layout/Stage/WallFace"]
+unique_name_in_owner = true
+color = Color(0.164706, 0.141176, 0.117647, 0.85)
+polygon = PackedVector2Array(28, 36, 40, 120, 34, 210, 48, 300, 36, 360)
+
+[node name="CrackB" type="Polygon2D" parent="Margin/Layout/Stage/WallFace"]
+unique_name_in_owner = true
+color = Color(0.121569, 0.101961, 0.0862745, 0.75)
+polygon = PackedVector2Array(90, 70, 110, 90, 102, 180, 124, 250, 112, 340)
+
+[node name="CrackC" type="Polygon2D" parent="Margin/Layout/Stage/WallFace"]
+unique_name_in_owner = true
+color = Color(0.180392, 0.156863, 0.129412, 0.7)
+polygon = PackedVector2Array(160, 48, 168, 140, 150, 220, 172, 310)
+
+[node name="Cabinet" type="ColorRect" parent="Margin/Layout/Stage"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -78.0
+offset_top = -168.0
+offset_right = -22.0
+offset_bottom = -88.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+color = Color(0.211765, 0.172549, 0.12549, 1)
+
+[node name="CabinetSlot" type="ColorRect" parent="Margin/Layout/Stage/Cabinet"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 12.0
+offset_right = -10.0
+offset_bottom = -14.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.101961, 0.0862745, 0.0627451, 1)
+
+[node name="StageCaption" type="Label" parent="Margin/Layout/Stage"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = -36.0
+offset_right = -12.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.721569, 0.643137, 0.521569, 1)
+theme_override_font_sizes/font_size = 14
+text = "夜班 · 一面墙 · 进度到不了 100"
+horizontal_alignment = 1
+
+[node name="Desk" type="VBoxContainer" parent="Margin/Layout"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.12
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="Margin/Layout/Desk"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.917647, 0.862745, 0.776471, 1)
+theme_override_font_sizes/font_size = 22
+text = "CONTRACT #1 · 墙与夜班"
+
+[node name="SubtitleLabel" type="Label" parent="Margin/Layout/Desk"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.721569, 0.643137, 0.521569, 1)
+autowrap_mode = 3
+text = "三个动词：修 / 听 / 说。数字只来自 wall_table.gd。LLM 关闭，不准写表。"
+
+[node name="HudGrid" type="GridContainer" parent="Margin/Layout/Desk"]
+layout_mode = 2
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 4
+columns = 2
+
+[node name="TimeLabel" type="Label" parent="Margin/Layout/Desk/HudGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.917647, 0.862745, 0.776471, 1)
+text = "时刻 00:00"
+
+[node name="PatienceLabel" type="Label" parent="Margin/Layout/Desk/HudGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.917647, 0.862745, 0.776471, 1)
+text = "耐性 72"
+
+[node name="SeenLabel" type="Label" parent="Margin/Layout/Desk/HudGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.917647, 0.862745, 0.776471, 1)
+text = "被看见 4"
+
+[node name="WallLabel" type="Label" parent="Margin/Layout/Desk/HudGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.917647, 0.862745, 0.776471, 1)
+text = "墙进度 18"
+
+[node name="PatienceBar" type="ProgressBar" parent="Margin/Layout/Desk"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+max_value = 100.0
+value = 72.0
+show_percentage = false
+
+[node name="SeenBar" type="ProgressBar" parent="Margin/Layout/Desk"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+max_value = 100.0
+value = 4.0
+show_percentage = false
+
+[node name="WallBar" type="ProgressBar" parent="Margin/Layout/Desk"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+max_value = 100.0
+value = 18.0
+show_percentage = false
+
+[node name="TalkLine" type="Label" parent="Margin/Layout/Desk"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.917647, 0.862745, 0.776471, 1)
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
+text = "零点。墙在。工具柜锁是坏的。"
+
+[node name="MechanicLabel" type="Label" parent="Margin/Layout/Desk"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.541176, 0.478431, 0.380392, 1)
+autowrap_mode = 3
+text = "数字只来自表，不来自句子。LLM 关闭。"
+
+[node name="VerbRow" type="HBoxContainer" parent="Margin/Layout/Desk"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RepairButton" type="Button" parent="Margin/Layout/Desk/VerbRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "修"
+
+[node name="ListenButton" type="Button" parent="Margin/Layout/Desk/VerbRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "听"
+
+[node name="SpeakButton" type="Button" parent="Margin/Layout/Desk/VerbRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "说"
+
+[node name="ExtraOptions" type="VBoxContainer" parent="Margin/Layout/Desk"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="HintLabel" type="Label" parent="Margin/Layout/Desk"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.541176, 0.478431, 0.380392, 1)
+autowrap_mode = 3
+text = "修到天明：连点修八次。抢装备：连点说四次，再点抢装备。罢工：听三次、说三次，再点登记罢工。墙进度封顶 97，界面写成「99. 无法竣工」。"
+
+[node name="EndingPanel" type="ColorRect" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0313726, 0.027451, 0.0235294, 0.92)
+
+[node name="EndingBox" type="VBoxContainer" parent="EndingPanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -140.0
+offset_right = 280.0
+offset_bottom = 140.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="EndingTitle" type="Label" parent="EndingPanel/EndingBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.917647, 0.862745, 0.776471, 1)
+theme_override_font_sizes/font_size = 26
+text = "结局"
+horizontal_alignment = 1
+
+[node name="EndingBody" type="Label" parent="EndingPanel/EndingBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.788235, 0.721569, 0.603922, 1)
+autowrap_mode = 3
+text = "……"
+horizontal_alignment = 1
+
+[node name="RestartButton" type="Button" parent="EndingPanel/EndingBox"]
+layout_mode = 2
+text = "重开"
+
+[connection signal="pressed" from="Margin/Layout/Desk/VerbRow/RepairButton" to="." method="_on_repair_pressed"]
+[connection signal="pressed" from="Margin/Layout/Desk/VerbRow/ListenButton" to="." method="_on_listen_pressed"]
+[connection signal="pressed" from="Margin/Layout/Desk/VerbRow/SpeakButton" to="." method="_on_speak_pressed"]
+[connection signal="pressed" from="EndingPanel/EndingBox/RestartButton" to="." method="_on_restart_pressed"]
